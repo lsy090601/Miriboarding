@@ -1,0 +1,36 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.submit {
+  margin-top: 12px;
+}
+
+.roleError {
+  color: var(--color-error);
+  font-size: 13px;
+  margin: -8px 0 0;
+  text-align: center;
+}
+
+.successText {
+  color: var(--color-primary);
+  font-size: 22px;
+  font-weight: 600;
+  text-align: center;
+  margin: -8px 0 4px;
+}
+
+.backLink {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-primary);
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+}
