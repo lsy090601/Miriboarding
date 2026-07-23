@@ -1,0 +1,35 @@
+.field {
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.row > *:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkButton {
+  width: auto;
+  height: 56px;
+  padding: 0 16px;
+  font-size: 14px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.successText {
+  margin: 6px 0 0 22px;
+  font-size: 13px;
+  color: #2e9e5b;
+}
+
+.takenText {
+  margin: 6px 0 0 22px;
+  font-size: 13px;
+  color: var(--color-error);
+}

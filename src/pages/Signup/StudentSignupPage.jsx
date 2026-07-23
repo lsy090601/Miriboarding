@@ -1,125 +1,84 @@
 import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import AuthLayout from '../../components/AuthLayout/AuthLayout.jsx'
 import Input from '../../components/Input/Input.jsx'
+import Select from '../../components/Select/Select.jsx'
 import Button from '../../components/Button/Button.jsx'
-import RoleToggle from '../../components/RoleToggle/RoleToggle.jsx'
-import { MailIcon, LockIcon, UserIcon, CapIcon } from '../../components/icons/Icons.jsx'
+import DuplicateCheckField from '../../components/DuplicateCheckField/DuplicateCheckField.jsx'
+import PasswordStrengthMeter from '../../components/PasswordStrengthMeter/PasswordStrengthMeter.jsx'
+import TermsCheckboxes from '../../components/TermsCheckboxes/TermsCheckboxes.jsx'
+import { LockIcon, UserIcon, CapIcon } from '../../components/icons/Icons.jsx'
 import { isValidEmail, isValidPassword, doPasswordsMatch, isRequired } from '../../utils/validation.js'
+import { checkEmailExists } from '../../api/mockApi.js'
 import styles from './SignupForm.module.css'
 
+const SCHOOL_OPTIONS = ['서울고등학교', '미리고등학교', '한빛고등학교', '기타']
+const GRADE_OPTIONS = ['1학년', '2학년', '3학년']
+
 export default function StudentSignupPage() {
-  const navigate = useNavigate()
   const { state } = useLocation()
-  const [step, setStep] = useState(1)
-  const [step1Form, setStep1Form] = useState({
+  const [form, setForm] = useState({
     email: state?.email ?? '',
-    id: '',
     password: state?.password ?? '',
     confirmPassword: state?.confirmPassword ?? '',
+    name: state?.name ?? '',
+    school: '',
+    grade: '',
   })
-  const [step2Form, setStep2Form] = useState({ name: state?.name ?? '', school: '', grade: '' })
+  const [emailCheck, setEmailCheck] = useState(null)
+  const [checkingEmail, setCheckingEmail] = useState(false)
+  const [terms, setTerms] = useState({ tos: false, privacy: false, age: false })
   const [errors, setErrors] = useState({})
+  const [submitted, setSubmitted] = useState(false)
 
-  function handleStep1Change(e) {
+  function handleChange(e) {
     const { name, value } = e.target
-    setStep1Form((prev) => ({ ...prev, [name]: value }))
+    setForm((prev) => ({ ...prev, [name]: value }))
+    if (name === 'email') setEmailCheck(null)
   }
 
-  function handleStep2Change(e) {
-    const { name, value } = e.target
-    setStep2Form((prev) => ({ ...prev, [name]: value }))
+  async function handleCheckEmail() {
+    if (!isValidEmail(form.email)) {
+      setErrors((prev) => ({ ...prev, email: '올바른 이메일 형식이 아닙니다.' }))
+      return
+    }
+    setCheckingEmail(true)
+    const result = await checkEmailExists(form.email)
+    setCheckingEmail(false)
+    setEmailCheck(result.exists ? 'taken' : 'available')
   }
 
-  function validateStep1() {
+  function validate() {
     const nextErrors = {}
-    if (!isRequired(step1Form.email)) nextErrors.email = '이메일을 입력해주세요.'
-    else if (!isValidEmail(step1Form.email)) nextErrors.email = '올바른 이메일 형식이 아닙니다.'
-    if (!isRequired(step1Form.id)) nextErrors.id = '아이디를 입력해주세요.'
-    if (!isValidPassword(step1Form.password)) nextErrors.password = '비밀번호는 8자 이상이어야 합니다.'
-    if (!doPasswordsMatch(step1Form.password, step1Form.confirmPassword)) nextErrors.confirmPassword = '비밀번호가 일치하지 않습니다.'
+    if (!isRequired(form.email)) nextErrors.email = '이메일을 입력해주세요.'
+    else if (!isValidEmail(form.email)) nextErrors.email = '올바른 이메일 형식이 아닙니다.'
+    else if (emailCheck !== 'available') nextErrors.email = '이메일 중복 확인을 해주세요.'
+    if (!isValidPassword(form.password)) nextErrors.password = '비밀번호는 8자 이상이어야 합니다.'
+    if (!doPasswordsMatch(form.password, form.confirmPassword)) nextErrors.confirmPassword = '비밀번호가 일치하지 않습니다.'
+    if (!isRequired(form.name)) nextErrors.name = '이름을 입력해주세요.'
+    if (!isRequired(form.school)) nextErrors.school = '학교를 선택해주세요.'
+    if (!isRequired(form.grade)) nextErrors.grade = '학년을 선택해주세요.'
+    if (!terms.tos || !terms.privacy || !terms.age) nextErrors.terms = '약관에 모두 동의해주세요.'
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
-  }
-
-  function validateStep2() {
-    const nextErrors = {}
-    if (!isRequired(step2Form.name)) nextErrors.name = '이름을 입력해주세요.'
-    if (!isRequired(step2Form.school)) nextErrors.school = '학교명을 입력해주세요.'
-    if (!isRequired(step2Form.grade)) nextErrors.grade = '학년을 입력해주세요.'
-    setErrors(nextErrors)
-    return Object.keys(nextErrors).length === 0
-  }
-
-  function handleNext(e) {
-    e.preventDefault()
-    if (!validateStep1()) return
-    setErrors({})
-    setStep(2)
   }
 
   function handleSubmit(e) {
     e.preventDefault()
-    if (!validateStep2()) return
-    console.log('student signup complete', { ...step1Form, ...step2Form })
-    navigate('/login')
+    if (!validate()) return
+    console.log('student signup complete', { ...form, terms })
+    setSubmitted(true)
   }
 
-  function handleSwitchRole(nextRole) {
-    if (nextRole === 'company') {
-      navigate('/signup/company', { state: step1Form })
-    }
-  }
-
-  if (step === 1) {
+  if (submitted) {
     return (
       <AuthLayout>
-        <form className={styles.form} onSubmit={handleNext}>
-          <Input
-            name="email"
-            type="email"
-            placeholder="email"
-            value={step1Form.email}
-            onChange={handleStep1Change}
-            error={errors.email}
-            icon={<MailIcon />}
-            autoComplete="email"
-          />
-          <Input
-            name="id"
-            type="text"
-            placeholder="id"
-            value={step1Form.id}
-            onChange={handleStep1Change}
-            error={errors.id}
-            icon={<UserIcon />}
-            autoComplete="username"
-          />
-          <Input
-            name="password"
-            type="password"
-            placeholder="password"
-            value={step1Form.password}
-            onChange={handleStep1Change}
-            error={errors.password}
-            icon={<LockIcon />}
-            autoComplete="new-password"
-          />
-          <Input
-            name="confirmPassword"
-            type="password"
-            placeholder="re-enter password"
-            value={step1Form.confirmPassword}
-            onChange={handleStep1Change}
-            error={errors.confirmPassword}
-            icon={<LockIcon />}
-            autoComplete="new-password"
-          />
-          <RoleToggle value="student" onChange={handleSwitchRole} />
-          <Button type="submit" variant="primary" className={styles.submit}>
-            next
-          </Button>
-        </form>
+        <div className={styles.form}>
+          <p className={styles.successText}>회원가입이 완료되었습니다!</p>
+          <Link to="/login" className={styles.link}>
+            로그인하러 가기
+          </Link>
+        </div>
       </AuthLayout>
     )
   }
@@ -127,40 +86,70 @@ export default function StudentSignupPage() {
   return (
     <AuthLayout>
       <form className={styles.form} onSubmit={handleSubmit}>
-        <button type="button" className={styles.backLink} onClick={() => setStep(1)}>
-          ← back
-        </button>
+        <DuplicateCheckField
+          name="email"
+          value={form.email}
+          onChange={handleChange}
+          placeholder="email"
+          error={errors.email}
+          status={emailCheck}
+          checking={checkingEmail}
+          onCheck={handleCheckEmail}
+        />
+        <div>
+          <Input
+            name="password"
+            type="password"
+            placeholder="password"
+            value={form.password}
+            onChange={handleChange}
+            error={errors.password}
+            icon={<LockIcon />}
+            autoComplete="new-password"
+          />
+          <PasswordStrengthMeter password={form.password} />
+        </div>
+        <Input
+          name="confirmPassword"
+          type="password"
+          placeholder="re-enter password"
+          value={form.confirmPassword}
+          onChange={handleChange}
+          error={errors.confirmPassword}
+          icon={<LockIcon />}
+          autoComplete="new-password"
+        />
         <Input
           name="name"
           type="text"
           placeholder="name"
-          value={step2Form.name}
-          onChange={handleStep2Change}
+          value={form.name}
+          onChange={handleChange}
           error={errors.name}
           icon={<UserIcon />}
           autoComplete="name"
         />
-        <Input
+        <Select
           name="school"
-          type="text"
-          placeholder="school name"
-          value={step2Form.school}
-          onChange={handleStep2Change}
+          value={form.school}
+          onChange={handleChange}
+          options={SCHOOL_OPTIONS}
+          placeholder="학교를 선택하세요"
           error={errors.school}
           icon={<CapIcon />}
-          autoComplete="organization"
         />
-        <Input
+        <Select
           name="grade"
-          type="text"
-          placeholder="grade"
-          value={step2Form.grade}
-          onChange={handleStep2Change}
+          value={form.grade}
+          onChange={handleChange}
+          options={GRADE_OPTIONS}
+          placeholder="학년을 선택하세요"
           error={errors.grade}
           icon={<CapIcon />}
         />
+        <TermsCheckboxes value={terms} onChange={setTerms} error={errors.terms} />
         <Button type="submit" variant="primary" className={styles.submit}>
-          create an account
+          가입하기
         </Button>
       </form>
     </AuthLayout>

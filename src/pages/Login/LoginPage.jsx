@@ -60,6 +60,13 @@ export default function LoginPage() {
         <Link to="/signup" className={styles.link}>
           create an account
         </Link>
+        <button
+          type="button"
+          className={styles.forgotLink}
+          onClick={() => console.log('forgot password clicked')}
+        >
+          비밀번호를 잊으셨나요?
+        </button>
       </form>
     </AuthLayout>
   )

@@ -1,0 +1,23 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.verified {
+  background: rgba(46, 158, 91, 0.12);
+  color: #2e9e5b;
+}
+
+.invalid {
+  background: rgba(214, 69, 69, 0.12);
+  color: var(--color-error);
+}
+
+.unavailable {
+  background: rgba(214, 154, 45, 0.14);
+  color: #b57a1c;
+}

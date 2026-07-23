@@ -1,111 +1,105 @@
-import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import AuthLayout from '../../components/AuthLayout/AuthLayout.jsx'
 import Input from '../../components/Input/Input.jsx'
+import Select from '../../components/Select/Select.jsx'
 import Button from '../../components/Button/Button.jsx'
-import RoleToggle from '../../components/RoleToggle/RoleToggle.jsx'
-import { MailIcon, LockIcon, UserIcon, PencilIcon, PhoneIcon, CapIcon } from '../../components/icons/Icons.jsx'
-import {
-  isValidEmail,
-  isValidPassword,
-  doPasswordsMatch,
-  isRequired,
-  isValidBizNumber,
-  isValidPhone,
-} from '../../utils/validation.js'
-import { verifyBusinessNumber } from '../../api/mockApi.js'
+import DuplicateCheckField from '../../components/DuplicateCheckField/DuplicateCheckField.jsx'
+import PasswordStrengthMeter from '../../components/PasswordStrengthMeter/PasswordStrengthMeter.jsx'
+import TermsCheckboxes from '../../components/TermsCheckboxes/TermsCheckboxes.jsx'
+import VerificationBadge from '../../components/VerificationBadge/VerificationBadge.jsx'
+import ReadOnlyField from '../../components/ReadOnlyField/ReadOnlyField.jsx'
+import { LockIcon, UserIcon, PencilIcon, PhoneIcon, CapIcon } from '../../components/icons/Icons.jsx'
+import { isValidEmail, isValidPassword, doPasswordsMatch, isRequired, isValidPhone } from '../../utils/validation.js'
+import { formatBizNumber } from '../../utils/format.js'
+import { verifyBusinessNumber, checkEmailExists } from '../../api/mockApi.js'
 import styles from './SignupForm.module.css'
 
+const POSITION_OPTIONS = ['사원', '주임', '대리', '과장', '차장', '부장', '이사', '대표']
+
 export default function CompanySignupPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const step = searchParams.get('step') === '2' ? 2 : 1
   const navigate = useNavigate()
   const { state } = useLocation()
-  const [step, setStep] = useState(1)
-  const [step1Form, setStep1Form] = useState({
+
+  const [bizNumber, setBizNumber] = useState('')
+  const [verification, setVerification] = useState(null)
+  const [verifying, setVerifying] = useState(false)
+  const [bizError, setBizError] = useState('')
+
+  const [contactForm, setContactForm] = useState({
+    contactName: state?.name ?? '',
+    position: '',
     email: state?.email ?? '',
-    name: state?.name ?? '',
     password: state?.password ?? '',
     confirmPassword: state?.confirmPassword ?? '',
+    companyPhone: '',
   })
-  const [bizNumber, setBizNumber] = useState('')
-  const [companyForm, setCompanyForm] = useState({ companyName: '', industry: '', foundedAt: '' })
-  const [contactForm, setContactForm] = useState({ contactName: '', position: '', phone: '' })
+  const [emailCheck, setEmailCheck] = useState(null)
+  const [checkingEmail, setCheckingEmail] = useState(false)
+  const [terms, setTerms] = useState({ tos: false, privacy: false, age: false })
   const [errors, setErrors] = useState({})
-  const [verifying, setVerifying] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
 
-  function handleStep1Change(e) {
-    const { name, value } = e.target
-    setStep1Form((prev) => ({ ...prev, [name]: value }))
+  useEffect(() => {
+    if (step === 2 && verification?.status !== 'verified') {
+      setSearchParams({ step: '1' })
+    }
+  }, [step, verification, setSearchParams])
+
+  function handleBizNumberChange(e) {
+    setBizNumber(formatBizNumber(e.target.value))
+    setVerification(null)
+    setBizError('')
   }
 
-  function handleCompanyChange(e) {
-    const { name, value } = e.target
-    setCompanyForm((prev) => ({ ...prev, [name]: value }))
+  async function handleVerify(e) {
+    e.preventDefault()
+    setVerifying(true)
+    setBizError('')
+    const result = await verifyBusinessNumber(bizNumber)
+    setVerifying(false)
+    setVerification(result)
+    if (result.status === 'invalid') setBizError('사업자 번호 형식을 확인해주세요. (예: 123-45-67890)')
+    if (result.status === 'unavailable') setBizError('이미 등록되었거나 사용할 수 없는 사업자 번호입니다.')
+  }
+
+  function handleGoToStep2() {
+    if (verification?.status !== 'verified') return
+    setSearchParams({ step: '2' })
   }
 
   function handleContactChange(e) {
     const { name, value } = e.target
     setContactForm((prev) => ({ ...prev, [name]: value }))
+    if (name === 'email') setEmailCheck(null)
   }
 
-  function validateStep1() {
-    const nextErrors = {}
-    if (!isRequired(step1Form.email)) nextErrors.email = '이메일을 입력해주세요.'
-    else if (!isValidEmail(step1Form.email)) nextErrors.email = '올바른 이메일 형식이 아닙니다.'
-    if (!isRequired(step1Form.name)) nextErrors.name = '이름을 입력해주세요.'
-    if (!isValidPassword(step1Form.password)) nextErrors.password = '비밀번호는 8자 이상이어야 합니다.'
-    if (!doPasswordsMatch(step1Form.password, step1Form.confirmPassword)) nextErrors.confirmPassword = '비밀번호가 일치하지 않습니다.'
-    setErrors(nextErrors)
-    return Object.keys(nextErrors).length === 0
-  }
-
-  function handleStep1Next(e) {
-    e.preventDefault()
-    if (!validateStep1()) return
-    setErrors({})
-    setStep(2)
-  }
-
-  function handleVerifyBizNumber(e) {
-    e.preventDefault()
-    if (!isValidBizNumber(bizNumber)) {
-      setErrors({ bizNumber: '사업자 번호 형식을 확인해주세요. (예: 123-45-67890)' })
+  async function handleCheckEmail() {
+    if (!isValidEmail(contactForm.email)) {
+      setErrors((prev) => ({ ...prev, email: '올바른 이메일 형식이 아닙니다.' }))
       return
     }
-    setErrors({})
-    setVerifying(true)
-    verifyBusinessNumber(bizNumber)
-      .then(() => {
-        setVerifying(false)
-        setErrors({})
-        setStep(3)
-      })
-      .catch((err) => {
-        setVerifying(false)
-        setErrors({ bizNumber: err.message })
-      })
-  }
-
-  function validateCompanyForm() {
-    const nextErrors = {}
-    if (!isRequired(companyForm.companyName)) nextErrors.companyName = '회사명을 입력해주세요.'
-    if (!isRequired(companyForm.industry)) nextErrors.industry = '업종을 입력해주세요.'
-    if (!isRequired(companyForm.foundedAt)) nextErrors.foundedAt = '설립일을 입력해주세요.'
-    setErrors(nextErrors)
-    return Object.keys(nextErrors).length === 0
-  }
-
-  function handleCompanyNext(e) {
-    e.preventDefault()
-    if (!validateCompanyForm()) return
-    setErrors({})
-    setStep(4)
+    setCheckingEmail(true)
+    const result = await checkEmailExists(contactForm.email)
+    setCheckingEmail(false)
+    setEmailCheck(result.exists ? 'taken' : 'available')
   }
 
   function validateContactForm() {
     const nextErrors = {}
     if (!isRequired(contactForm.contactName)) nextErrors.contactName = '담당자명을 입력해주세요.'
-    if (!isRequired(contactForm.position)) nextErrors.position = '직급을 입력해주세요.'
-    if (!isValidPhone(contactForm.phone)) nextErrors.phone = '전화번호 형식을 확인해주세요. (예: 010-1234-5678)'
+    if (!isRequired(contactForm.position)) nextErrors.position = '직급을 선택해주세요.'
+    if (!isRequired(contactForm.email)) nextErrors.email = '이메일을 입력해주세요.'
+    else if (!isValidEmail(contactForm.email)) nextErrors.email = '올바른 이메일 형식이 아닙니다.'
+    else if (emailCheck !== 'available') nextErrors.email = '이메일 중복 확인을 해주세요.'
+    if (!isValidPassword(contactForm.password)) nextErrors.password = '비밀번호는 8자 이상이어야 합니다.'
+    if (!doPasswordsMatch(contactForm.password, contactForm.confirmPassword))
+      nextErrors.confirmPassword = '비밀번호가 일치하지 않습니다.'
+    if (contactForm.companyPhone && !isValidPhone(contactForm.companyPhone))
+      nextErrors.companyPhone = '전화번호 형식을 확인해주세요. (예: 02-1234-5678)'
+    if (!terms.tos || !terms.privacy || !terms.age) nextErrors.terms = '약관에 모두 동의해주세요.'
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
@@ -113,131 +107,74 @@ export default function CompanySignupPage() {
   function handleSubmit(e) {
     e.preventDefault()
     if (!validateContactForm()) return
-    console.log('company signup complete', { ...step1Form, bizNumber, ...companyForm, ...contactForm })
-    navigate('/login')
+    console.log('company signup complete', {
+      bizNumber,
+      company: verification?.company,
+      ...contactForm,
+      terms,
+    })
+    setSubmitted(true)
   }
 
-  function handleSwitchRole(nextRole) {
-    if (nextRole === 'student') {
-      navigate('/signup/student', { state: step1Form })
-    }
+  if (submitted) {
+    return (
+      <AuthLayout>
+        <div className={styles.form}>
+          <p className={styles.successText}>회원가입이 완료되었습니다!</p>
+          <Link to="/login" className={styles.link}>
+            로그인하러 가기
+          </Link>
+        </div>
+      </AuthLayout>
+    )
   }
 
   if (step === 1) {
     return (
       <AuthLayout>
-        <form className={styles.form} onSubmit={handleStep1Next}>
-          <Input
-            name="email"
-            type="email"
-            placeholder="email"
-            value={step1Form.email}
-            onChange={handleStep1Change}
-            error={errors.email}
-            icon={<MailIcon />}
-            autoComplete="email"
-          />
-          <Input
-            name="name"
-            type="text"
-            placeholder="name"
-            value={step1Form.name}
-            onChange={handleStep1Change}
-            error={errors.name}
-            icon={<UserIcon />}
-            autoComplete="name"
-          />
-          <Input
-            name="password"
-            type="password"
-            placeholder="password"
-            value={step1Form.password}
-            onChange={handleStep1Change}
-            error={errors.password}
-            icon={<LockIcon />}
-            autoComplete="new-password"
-          />
-          <Input
-            name="confirmPassword"
-            type="password"
-            placeholder="re-enter password"
-            value={step1Form.confirmPassword}
-            onChange={handleStep1Change}
-            error={errors.confirmPassword}
-            icon={<LockIcon />}
-            autoComplete="new-password"
-          />
-          <RoleToggle value="company" onChange={handleSwitchRole} />
-          <Button type="submit" variant="primary" className={styles.submit}>
-            next
-          </Button>
-        </form>
-      </AuthLayout>
-    )
-  }
+        <form className={styles.form} onSubmit={handleVerify}>
+          <div>
+            <div className={styles.row}>
+              <Input
+                name="bizNumber"
+                type="text"
+                placeholder="사업자 번호 입력(123-45-67890)"
+                value={bizNumber}
+                onChange={handleBizNumberChange}
+                error={bizError}
+                icon={<PencilIcon />}
+              />
+              <Button type="submit" variant="outline" className={styles.checkButton} disabled={verifying}>
+                {verifying ? '확인 중...' : '검증'}
+              </Button>
+            </div>
+            {verification?.status && (
+              <div className={styles.badgeRow}>
+                <VerificationBadge status={verification.status} />
+              </div>
+            )}
+          </div>
 
-  if (step === 2) {
-    return (
-      <AuthLayout>
-        <form className={styles.form} onSubmit={handleVerifyBizNumber}>
-          <button type="button" className={styles.backLink} onClick={() => setStep(1)}>
-            ← back
-          </button>
-          <Input
-            name="bizNumber"
-            type="text"
-            placeholder="사업자 번호 입력(123-45-67890)"
-            value={bizNumber}
-            onChange={(e) => setBizNumber(e.target.value)}
-            error={errors.bizNumber}
-            icon={<PencilIcon />}
-          />
-          <Button type="submit" variant="primary" className={styles.submit} disabled={verifying}>
-            {verifying ? 'verifying...' : 'next'}
-          </Button>
-        </form>
-      </AuthLayout>
-    )
-  }
+          {verification?.status === 'verified' && (
+            <div className={styles.sectionGroup}>
+              <ReadOnlyField label="회사명" value={verification.company.companyName} icon={<PencilIcon />} />
+              <ReadOnlyField label="업종" value={verification.company.industry} icon={<PencilIcon />} />
+              <ReadOnlyField label="설립일" value={verification.company.foundedAt} icon={<PencilIcon />} />
+            </div>
+          )}
 
-  if (step === 3) {
-    return (
-      <AuthLayout>
-        <form className={styles.form} onSubmit={handleCompanyNext}>
-          <button type="button" className={styles.backLink} onClick={() => setStep(2)}>
-            ← back
-          </button>
-          <p className={styles.successText}>검증 성공!</p>
-          <Input
-            name="companyName"
-            type="text"
-            placeholder="회사명"
-            value={companyForm.companyName}
-            onChange={handleCompanyChange}
-            error={errors.companyName}
-            icon={<PencilIcon />}
-          />
-          <Input
-            name="industry"
-            type="text"
-            placeholder="업종"
-            value={companyForm.industry}
-            onChange={handleCompanyChange}
-            error={errors.industry}
-            icon={<PencilIcon />}
-          />
-          <Input
-            name="foundedAt"
-            type="text"
-            placeholder="설립일"
-            value={companyForm.foundedAt}
-            onChange={handleCompanyChange}
-            error={errors.foundedAt}
-            icon={<PencilIcon />}
-          />
-          <Button type="submit" variant="primary" className={styles.submit}>
-            next
+          <Button
+            type="button"
+            variant="primary"
+            className={styles.submit}
+            disabled={verification?.status !== 'verified'}
+            onClick={handleGoToStep2}
+          >
+            다음 단계로
           </Button>
+          <button type="button" className={styles.backLink} onClick={() => navigate('/signup')}>
+            ← 이전
+          </button>
         </form>
       </AuthLayout>
     )
@@ -246,9 +183,11 @@ export default function CompanySignupPage() {
   return (
     <AuthLayout>
       <form className={styles.form} onSubmit={handleSubmit}>
-        <button type="button" className={styles.backLink} onClick={() => setStep(3)}>
-          ← back
-        </button>
+        <div className={styles.sectionGroup}>
+          <ReadOnlyField label="회사명" value={verification?.company?.companyName} icon={<PencilIcon />} />
+          <ReadOnlyField label="업종" value={verification?.company?.industry} icon={<PencilIcon />} />
+          <ReadOnlyField label="설립일" value={verification?.company?.foundedAt} icon={<PencilIcon />} />
+        </div>
         <Input
           name="contactName"
           type="text"
@@ -258,28 +197,64 @@ export default function CompanySignupPage() {
           error={errors.contactName}
           icon={<UserIcon />}
         />
-        <Input
+        <Select
           name="position"
-          type="text"
-          placeholder="직급"
           value={contactForm.position}
           onChange={handleContactChange}
+          options={POSITION_OPTIONS}
+          placeholder="직급을 선택하세요"
           error={errors.position}
           icon={<CapIcon />}
         />
-        <Input
-          name="phone"
-          type="tel"
-          placeholder="전화번호"
-          value={contactForm.phone}
+        <DuplicateCheckField
+          name="email"
+          value={contactForm.email}
           onChange={handleContactChange}
-          error={errors.phone}
-          icon={<PhoneIcon />}
-          inputMode="tel"
+          placeholder="담당자 이메일"
+          error={errors.email}
+          status={emailCheck}
+          checking={checkingEmail}
+          onCheck={handleCheckEmail}
         />
+        <div>
+          <Input
+            name="password"
+            type="password"
+            placeholder="비밀번호"
+            value={contactForm.password}
+            onChange={handleContactChange}
+            error={errors.password}
+            icon={<LockIcon />}
+            autoComplete="new-password"
+          />
+          <PasswordStrengthMeter password={contactForm.password} />
+        </div>
+        <Input
+          name="confirmPassword"
+          type="password"
+          placeholder="비밀번호 확인"
+          value={contactForm.confirmPassword}
+          onChange={handleContactChange}
+          error={errors.confirmPassword}
+          icon={<LockIcon />}
+          autoComplete="new-password"
+        />
+        <Input
+          name="companyPhone"
+          type="tel"
+          placeholder="회사 연락처 (선택)"
+          value={contactForm.companyPhone}
+          onChange={handleContactChange}
+          error={errors.companyPhone}
+          icon={<PhoneIcon />}
+        />
+        <TermsCheckboxes value={terms} onChange={setTerms} error={errors.terms} />
         <Button type="submit" variant="primary" className={styles.submit}>
-          create an account
+          가입 완료하기
         </Button>
+        <button type="button" className={styles.backLink} onClick={() => setSearchParams({ step: '1' })}>
+          ← 이전
+        </button>
       </form>
     </AuthLayout>
   )
