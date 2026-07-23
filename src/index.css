@@ -1,0 +1,35 @@
+:root {
+  --color-primary: #1a2a80;
+  --color-primary-glow: #4192ff;
+  --color-error: #d64545;
+  --color-white: #ffffff;
+  --radius-pill: 999px;
+  --font-body: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
+  --font-logo: 'Black Han Sans', var(--font-body);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--color-primary);
+  background-color: var(--color-primary);
+}
+
+button,
+input {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+}

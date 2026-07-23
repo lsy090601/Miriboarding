@@ -1,0 +1,19 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.submit {
+  margin-top: 20px;
+}
+
+.link {
+  align-self: center;
+  margin-top: 4px;
+  color: var(--color-primary);
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: underline;
+}
