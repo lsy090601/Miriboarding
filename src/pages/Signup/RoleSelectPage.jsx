@@ -35,7 +35,8 @@ export default function RoleSelectPage() {
     e.preventDefault()
     if (!validate()) return
     console.log('signup role select', { ...form, role })
-    navigate(`/signup/${role}`, { state: { ...form } })
+    const target = role === 'company' ? '/signup/company?step=1' : `/signup/${role}`
+    navigate(target, { state: { ...form } })
   }
 
   return (

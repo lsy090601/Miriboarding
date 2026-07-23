@@ -1,0 +1,40 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 22px;
+  border: 1px solid rgba(26, 42, 128, 0.35);
+  border-radius: var(--radius-pill);
+  background: rgba(26, 42, 128, 0.05);
+}
+
+.label {
+  font-size: 14px;
+  color: rgba(26, 42, 128, 0.6);
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.value {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: rgba(26, 42, 128, 0.5);
+  flex-shrink: 0;
+  margin-left: 10px;
+}
