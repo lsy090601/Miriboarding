@@ -174,15 +174,20 @@ curl -X POST http://localhost:4000/api/onboarding/generate \
 ```json
 {
   "schedules": {
-    "day": [{ "time": "09:00", "activity": "..." }],
-    "week": [{ "time": "1일차", "activity": "..." }],
-    "month": [{ "time": "1주차", "activity": "..." }]
+    "day": [{ "time": "09:00", "activity": "...", "importance": "high" }],
+    "week": [{ "time": "1일차", "activity": "...", "importance": "medium" }],
+    "month": [{ "time": "1주차", "activity": "...", "importance": "low" }]
   },
   "missions": [
-    { "id": "...", "title": "...", "description": "...", "order": 1 }
-  ]
+    { "id": "...", "title": "...", "description": "...", "order": 1, "submissionType": "text", "options": [] }
+  ],
+  "jobTitle": "물류관리사",
+  "companyName": "OO물류",
+  "targetDate": null
 }
 ```
+
+`targetDate`(실습 시작일, D-day 계산용)는 요청 바디에 함께 보내면 저장된다(선택값, 안 보내면 `null`).
 
 같은 `companyId`로 60초 이내 재요청 시:
 
@@ -199,7 +204,7 @@ curl -i -X POST http://localhost:4000/api/onboarding/generate \
 curl http://localhost:4000/api/onboarding/11111111-1111-1111-1111-111111111111
 ```
 
-응답: `{ "schedules": {...}, "missions": [...], "createdAt": "..." }`
+응답: `{ "schedules": {...}, "missions": [...], "jobTitle": "...", "companyName": "...", "targetDate": "2026-09-07", "createdAt": "..." }`
 
 ### 3. 온보딩 수정
 
@@ -213,6 +218,8 @@ curl -X PUT http://localhost:4000/api/onboarding/11111111-1111-1111-1111-1111111
 ```
 
 응답: `{ "success": true, "updatedAt": "..." }`
+
+`targetDate`도 바디에 포함해서 함께 수정할 수 있다(생략 가능).
 
 ### 4. 미션 CRUD
 
@@ -243,6 +250,46 @@ curl -X PUT http://localhost:4000/api/onboarding/<enrollmentId>/progress \
 ```
 
 응답: `{ "success": true, "progressPercent": 45, "updatedAt": "..." }`
+
+### 6. 학생 등록(enrollment)
+
+학생이 특정 회사의 온보딩에 처음 진입할 때 호출한다(이미 등록돼 있으면 기존 `enrollmentId`를 그대로 반환하는 upsert 방식). 미션 제출/진도 업데이트는 `studentId`가 아니라 이 `enrollmentId`를 기준으로 동작한다.
+
+```bash
+# 등록(upsert) - 이미 등록돼 있어도 에러 없이 같은 enrollmentId를 반환
+curl -X POST http://localhost:4000/api/onboarding/11111111-1111-1111-1111-111111111111/enroll \
+  -H "Content-Type: application/json" \
+  -d '{"studentId":"22222222-2222-2222-2222-222222222222"}'
+```
+
+응답: `{ "enrollmentId": "..." }`
+
+```bash
+# 조회
+curl http://localhost:4000/api/onboarding/11111111-1111-1111-1111-111111111111/enrollment/22222222-2222-2222-2222-222222222222
+```
+
+응답: `{ "enrollmentId": "..." }` (없으면 `404 NOT_FOUND`)
+
+### 7. 미션 제출
+
+`missionId`는 `company_onboarding.missions` 배열 안의 `id`를 가리킨다(존재하지 않으면 `404 NOT_FOUND`).
+
+```bash
+# 제출
+curl -X POST http://localhost:4000/api/onboarding/enrollments/<enrollmentId>/missions/<missionId>/submissions \
+  -H "Content-Type: application/json" \
+  -d '{"content":"제출 내용(텍스트/선택지 값/파일명 등)"}'
+```
+
+응답: `{ "success": true, "submission": { "id": "...", "enrollment_id": "...", "mission_id": "...", "content": "...", "submitted_at": "...", "feedback": null } }`
+
+```bash
+# 해당 enrollment의 제출 내역 전체 조회 (미션별 완료 여부는 이 목록에 mission_id가 있는지로 판단)
+curl http://localhost:4000/api/onboarding/enrollments/<enrollmentId>/submissions
+```
+
+응답: `{ "submissions": [...] }`
 
 ### 에러 확인용 예시
 
