@@ -1,3 +1,5 @@
+import { DEMO_COMPANY_ID } from '../lib/auth.js'
+
 export const IMPORTANCE_LABEL = {
   low: '낮음',
   medium: '중간',
@@ -11,8 +13,8 @@ export const SUBMISSION_TYPE_LABEL = {
 }
 
 export const onboardings = {
-  'oo-logistics': {
-    companyId: 'oo-logistics',
+  [DEMO_COMPANY_ID]: {
+    companyId: DEMO_COMPANY_ID,
     companyName: 'OO물류',
     jobTitle: '물류관리사',
     targetDate: '2026-09-07',

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Modal from '../../components/Modal/Modal.jsx'
+import { DEMO_COMPANY_ID } from '../../lib/auth.js'
 import styles from './StudentHome.module.css'
 
 export default function StudentHome() {
@@ -13,7 +14,7 @@ export default function StudentHome() {
       setShowNotEnrolledModal(true)
       return
     }
-    navigate('/student/onboarding/oo-logistics')
+    navigate(`/student/onboarding/${DEMO_COMPANY_ID}`)
   }
 
   return (

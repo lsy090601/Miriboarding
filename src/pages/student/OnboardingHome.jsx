@@ -83,8 +83,14 @@ export default function OnboardingHome() {
         </p>
 
         <div className={styles.ddayBox}>
-          <span className={styles.ddayLabel}>{dDay >= 0 ? `D-${dDay}` : `D+${Math.abs(dDay)}`}</span>
-          <span className={styles.ddayDate}>실습 시작일 {formatDate(onboarding.targetDate)}</span>
+          {onboarding.targetDate ? (
+            <>
+              <span className={styles.ddayLabel}>{dDay >= 0 ? `D-${dDay}` : `D+${Math.abs(dDay)}`}</span>
+              <span className={styles.ddayDate}>실습 시작일 {formatDate(onboarding.targetDate)}</span>
+            </>
+          ) : (
+            <span className={styles.ddayDate}>실습 시작일이 아직 정해지지 않았어요</span>
+          )}
         </div>
 
         <div className={styles.cardList}>
