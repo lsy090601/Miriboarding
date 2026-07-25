@@ -8,6 +8,10 @@ import {
   updateMission,
   deleteMission,
   updateProgress,
+  enrollStudent,
+  getEnrollment,
+  submitMission,
+  listSubmissions,
 } from '../services/onboarding.service.js'
 
 function handleError(res, error) {
@@ -39,8 +43,8 @@ export async function getOnboardingHandler(req, res) {
 
 export async function updateOnboardingHandler(req, res) {
   try {
-    const { schedules, missions } = req.body
-    const result = await updateOnboarding(req.params.companyId, { schedules, missions })
+    const { schedules, missions, targetDate } = req.body
+    const result = await updateOnboarding(req.params.companyId, { schedules, missions, targetDate })
     return res.status(200).json(result)
   } catch (error) {
     return handleError(res, error)
@@ -90,6 +94,44 @@ export async function updateProgressHandler(req, res) {
     const { progressPercent } = req.body
     const result = await updateProgress(req.params.enrollmentId, progressPercent)
     return res.status(200).json(result)
+  } catch (error) {
+    return handleError(res, error)
+  }
+}
+
+export async function enrollHandler(req, res) {
+  try {
+    const { studentId } = req.body
+    const result = await enrollStudent(req.params.companyId, studentId)
+    return res.status(201).json(result)
+  } catch (error) {
+    return handleError(res, error)
+  }
+}
+
+export async function getEnrollmentHandler(req, res) {
+  try {
+    const result = await getEnrollment(req.params.companyId, req.params.studentId)
+    return res.status(200).json(result)
+  } catch (error) {
+    return handleError(res, error)
+  }
+}
+
+export async function submitMissionHandler(req, res) {
+  try {
+    const { content } = req.body
+    const result = await submitMission(req.params.enrollmentId, req.params.missionId, content)
+    return res.status(201).json(result)
+  } catch (error) {
+    return handleError(res, error)
+  }
+}
+
+export async function listSubmissionsHandler(req, res) {
+  try {
+    const submissions = await listSubmissions(req.params.enrollmentId)
+    return res.status(200).json({ submissions })
   } catch (error) {
     return handleError(res, error)
   }

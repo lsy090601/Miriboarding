@@ -23,6 +23,8 @@ function normalizeMissions(rawMissions) {
     title: mission.title,
     description: mission.description,
     order: mission.order ?? index + 1,
+    submissionType: mission.submissionType ?? 'text',
+    ...(mission.options ? { options: mission.options } : {}),
   }))
 }
 
@@ -34,6 +36,7 @@ async function fetchOnboardingRow(companyId) {
     .maybeSingle()
 
   if (error) {
+    console.error('[onboarding] fetchOnboardingRow 실패:', error)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '온보딩 정보 조회 중 오류가 발생했습니다.')
   }
   if (!data) {
@@ -51,12 +54,24 @@ async function saveMissions(companyId, missions) {
     .single()
 
   if (error) {
+    console.error('[onboarding] saveMissions 실패:', error)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '미션 정보 저장 중 오류가 발생했습니다.')
   }
   return data
 }
 
-export async function generateOnboarding({ companyId, jobTitle, companyName }) {
+async function fetchCompanyName(companyId) {
+  const { data, error } = await supabaseAdmin
+    .from('companies')
+    .select('company_name')
+    .eq('id', companyId)
+    .maybeSingle()
+
+  if (error || !data) return null
+  return data.company_name
+}
+
+export async function generateOnboarding({ companyId, jobTitle, companyName, targetDate }) {
   if (!isNonEmptyString(companyId) || !isNonEmptyString(jobTitle) || !isNonEmptyString(companyName)) {
     throw new OnboardingError(400, 'INVALID_INPUT', 'companyId, jobTitle, companyName을 모두 입력해주세요.')
   }
@@ -74,6 +89,7 @@ export async function generateOnboarding({ companyId, jobTitle, companyName }) {
         job_title: jobTitle,
         schedules: plan.schedules,
         missions,
+        target_date: targetDate ?? null,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'company_id' },
@@ -82,10 +98,17 @@ export async function generateOnboarding({ companyId, jobTitle, companyName }) {
     .single()
 
   if (error) {
+    console.error('[onboarding] generateOnboarding - upsert 실패:', error)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '온보딩 정보 저장 중 오류가 발생했습니다.')
   }
 
-  return { schedules: data.schedules, missions: data.missions }
+  return {
+    schedules: data.schedules,
+    missions: data.missions,
+    jobTitle: data.job_title,
+    companyName,
+    targetDate: data.target_date,
+  }
 }
 
 export async function getOnboarding(companyId) {
@@ -93,10 +116,18 @@ export async function getOnboarding(companyId) {
     throw new OnboardingError(400, 'INVALID_INPUT', 'companyId가 필요합니다.')
   }
   const row = await fetchOnboardingRow(companyId)
-  return { schedules: row.schedules, missions: row.missions, createdAt: row.created_at }
+  const companyName = await fetchCompanyName(companyId)
+  return {
+    schedules: row.schedules,
+    missions: row.missions,
+    jobTitle: row.job_title,
+    companyName,
+    targetDate: row.target_date,
+    createdAt: row.created_at,
+  }
 }
 
-export async function updateOnboarding(companyId, { schedules, missions }) {
+export async function updateOnboarding(companyId, { schedules, missions, targetDate }) {
   if (!isNonEmptyString(companyId)) {
     throw new OnboardingError(400, 'INVALID_INPUT', 'companyId가 필요합니다.')
   }
@@ -111,12 +142,18 @@ export async function updateOnboarding(companyId, { schedules, missions }) {
 
   const { data, error } = await supabaseAdmin
     .from('company_onboarding')
-    .update({ schedules, missions: normalizeMissions(missions), updated_at: new Date().toISOString() })
+    .update({
+      schedules,
+      missions: normalizeMissions(missions),
+      ...(targetDate !== undefined ? { target_date: targetDate } : {}),
+      updated_at: new Date().toISOString(),
+    })
     .eq('company_id', companyId)
     .select()
     .single()
 
   if (error) {
+    console.error('[onboarding] updateOnboarding 실패:', error)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '온보딩 정보 수정 중 오류가 발생했습니다.')
   }
 
@@ -199,8 +236,109 @@ export async function updateProgress(enrollmentId, progressPercent) {
     .single()
 
   if (error) {
+    console.error('[onboarding] updateProgress 실패:', error)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '진도 정보 저장 중 오류가 발생했습니다.')
   }
 
   return { success: true, progressPercent: data.progress_percent, updatedAt: data.updated_at }
+}
+
+export async function enrollStudent(companyId, studentId) {
+  if (!isNonEmptyString(companyId) || !isNonEmptyString(studentId)) {
+    throw new OnboardingError(400, 'INVALID_INPUT', 'companyId, studentId가 필요합니다.')
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('student_enrollment')
+    .upsert({ company_id: companyId, student_id: studentId }, { onConflict: 'student_id,company_id' })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('[onboarding] enrollStudent 실패:', error)
+    throw new OnboardingError(502, 'SUPABASE_ERROR', '등록 정보 저장 중 오류가 발생했습니다.')
+  }
+
+  return { enrollmentId: data.id }
+}
+
+export async function getEnrollment(companyId, studentId) {
+  if (!isNonEmptyString(companyId) || !isNonEmptyString(studentId)) {
+    throw new OnboardingError(400, 'INVALID_INPUT', 'companyId, studentId가 필요합니다.')
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('student_enrollment')
+    .select('id')
+    .eq('company_id', companyId)
+    .eq('student_id', studentId)
+    .maybeSingle()
+
+  if (error) {
+    console.error('[onboarding] getEnrollment 실패:', error)
+    throw new OnboardingError(502, 'SUPABASE_ERROR', '등록 정보 조회 중 오류가 발생했습니다.')
+  }
+  if (!data) {
+    throw new OnboardingError(404, 'NOT_FOUND', '등록 정보를 찾을 수 없습니다.')
+  }
+
+  return { enrollmentId: data.id }
+}
+
+export async function submitMission(enrollmentId, missionId, content) {
+  if (!isNonEmptyString(enrollmentId) || !isNonEmptyString(missionId)) {
+    throw new OnboardingError(400, 'INVALID_INPUT', 'enrollmentId, missionId가 필요합니다.')
+  }
+
+  const { data: enrollment, error: enrollmentError } = await supabaseAdmin
+    .from('student_enrollment')
+    .select('company_id')
+    .eq('id', enrollmentId)
+    .maybeSingle()
+
+  if (enrollmentError) {
+    console.error('[onboarding] submitMission - enrollment 조회 실패:', enrollmentError)
+    throw new OnboardingError(502, 'SUPABASE_ERROR', '등록 정보 조회 중 오류가 발생했습니다.')
+  }
+  if (!enrollment) {
+    throw new OnboardingError(404, 'NOT_FOUND', '등록 정보를 찾을 수 없습니다.')
+  }
+
+  const row = await fetchOnboardingRow(enrollment.company_id)
+  const missionExists = (row.missions ?? []).some((mission) => mission.id === missionId)
+  if (!missionExists) {
+    throw new OnboardingError(404, 'NOT_FOUND', '미션을 찾을 수 없습니다.')
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('mission_submission')
+    .insert({ enrollment_id: enrollmentId, mission_id: missionId, content: content ?? null })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('[onboarding] submitMission - insert 실패:', error)
+    throw new OnboardingError(502, 'SUPABASE_ERROR', '미션 제출 저장 중 오류가 발생했습니다.')
+  }
+
+  return { success: true, submission: data }
+}
+
+export async function listSubmissions(enrollmentId) {
+  if (!isNonEmptyString(enrollmentId)) {
+    throw new OnboardingError(400, 'INVALID_INPUT', 'enrollmentId가 필요합니다.')
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('mission_submission')
+    .select('*')
+    .eq('enrollment_id', enrollmentId)
+    .order('submitted_at', { ascending: false })
+
+  if (error) {
+    console.error('[onboarding] listSubmissions 실패:', error)
+    throw new OnboardingError(502, 'SUPABASE_ERROR', '제출 내역 조회 중 오류가 발생했습니다.')
+  }
+
+  return data ?? []
 }

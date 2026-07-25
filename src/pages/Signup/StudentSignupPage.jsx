@@ -10,6 +10,7 @@ import TermsCheckboxes from '../../components/TermsCheckboxes/TermsCheckboxes.js
 import { LockIcon, UserIcon, CapIcon } from '../../components/icons/Icons.jsx'
 import { isValidEmail, isValidPassword, doPasswordsMatch, isRequired } from '../../utils/validation.js'
 import { checkEmailExists } from '../../api/mockApi.js'
+import * as api from '../../lib/api.js'
 import styles from './SignupForm.module.css'
 
 const SCHOOL_OPTIONS = ['서울고등학교', '미리고등학교', '한빛고등학교', '기타']
@@ -30,6 +31,7 @@ export default function StudentSignupPage() {
   const [terms, setTerms] = useState({ tos: false, privacy: false, age: false })
   const [errors, setErrors] = useState({})
   const [submitted, setSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   function handleChange(e) {
     const { name, value } = e.target
@@ -63,11 +65,28 @@ export default function StudentSignupPage() {
     return Object.keys(nextErrors).length === 0
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!validate()) return
-    console.log('student signup complete', { ...form, terms })
-    setSubmitted(true)
+    setIsSubmitting(true)
+    try {
+      await api.signupStudent({
+        email: form.email,
+        password: form.password,
+        name: form.name,
+        school: form.school,
+        grade: form.grade,
+      })
+      setSubmitted(true)
+    } catch (error) {
+      if (error.code === 'EMAIL_TAKEN') {
+        setErrors({ email: '이미 가입된 이메일입니다.' })
+      } else {
+        setErrors({ name: error.message ?? '회원가입 중 오류가 발생했습니다.' })
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (submitted) {
@@ -148,8 +167,8 @@ export default function StudentSignupPage() {
           icon={<CapIcon />}
         />
         <TermsCheckboxes value={terms} onChange={setTerms} error={errors.terms} />
-        <Button type="submit" variant="primary" className={styles.submit}>
-          가입하기
+        <Button type="submit" variant="primary" className={styles.submit} disabled={isSubmitting}>
+          {isSubmitting ? '가입 처리 중...' : '가입하기'}
         </Button>
       </form>
     </AuthLayout>
