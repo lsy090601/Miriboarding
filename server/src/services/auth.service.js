@@ -104,8 +104,7 @@ export async function signupCompany({
     !isNonEmptyString(industry) ||
     !isNonEmptyString(founded_date) ||
     !isNonEmptyString(contact_name) ||
-    !isNonEmptyString(contact_position) ||
-    !isNonEmptyString(contact_phone)
+    !isNonEmptyString(contact_position)
   ) {
     throw new AuthError(400, 'INVALID_INPUT', '회사 정보를 모두 입력해주세요.')
   }
@@ -131,7 +130,7 @@ export async function signupCompany({
     founded_date,
     contact_name,
     contact_position,
-    contact_phone,
+    contact_phone: isNonEmptyString(contact_phone) ? contact_phone : null,
   })
   if (companiesError) {
     await rollbackAuthUser(authUser.id)

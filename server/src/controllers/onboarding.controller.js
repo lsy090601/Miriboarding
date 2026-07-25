@@ -43,8 +43,8 @@ export async function getOnboardingHandler(req, res) {
 
 export async function updateOnboardingHandler(req, res) {
   try {
-    const { schedules, missions } = req.body
-    const result = await updateOnboarding(req.params.companyId, { schedules, missions })
+    const { schedules, missions, targetDate } = req.body
+    const result = await updateOnboarding(req.params.companyId, { schedules, missions, targetDate })
     return res.status(200).json(result)
   } catch (error) {
     return handleError(res, error)
