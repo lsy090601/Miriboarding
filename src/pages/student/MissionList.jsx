@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import * as api from '../../lib/api.js'
-import { getStoredAuth, MOCK_STUDENT_ID } from '../../lib/auth.js'
+import { getCurrentStudentId } from '../../lib/auth.js'
 import { getOnboardingByCompanyId, getMissionProgress, SUBMISSION_TYPE_LABEL } from '../../mock/onboarding.js'
 import FallbackBanner from '../../components/FallbackBanner/FallbackBanner.jsx'
 import styles from './MissionList.module.css'
@@ -18,7 +18,7 @@ export default function MissionList() {
     let cancelled = false
 
     async function load() {
-      const studentId = getStoredAuth()?.userId ?? MOCK_STUDENT_ID
+      const studentId = getCurrentStudentId()
       try {
         const enrollment = await api.enrollStudent(companyId, studentId)
         const data = await api.getOnboarding(companyId)

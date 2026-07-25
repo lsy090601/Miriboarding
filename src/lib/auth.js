@@ -25,3 +25,12 @@ export function clearStoredAuth() {
 export function setDemoStudentSession() {
   setStoredAuth({ userId: MOCK_STUDENT_ID, userType: 'student', isDemo: true })
 }
+
+// 로그인된 계정이 학생일 때만 그 id를 쓰고, 아니면(회사 로그인/비로그인) 데모 학생 id로 폴백한다.
+// 회사 계정으로 로그인된 상태에서 학생 페이지에 들어오면 userId가 companies.id를 가리켜서
+// student_enrollment의 외래키 제약을 위반하는 문제가 있었음.
+export function getCurrentStudentId() {
+  const auth = getStoredAuth()
+  if (auth?.userType === 'student' && auth.userId) return auth.userId
+  return MOCK_STUDENT_ID
+}

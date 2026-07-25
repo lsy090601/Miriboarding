@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import * as api from '../../lib/api.js'
-import { getStoredAuth, MOCK_STUDENT_ID } from '../../lib/auth.js'
+import { getCurrentStudentId } from '../../lib/auth.js'
 import { getOnboardingByCompanyId, IMPORTANCE_LABEL } from '../../mock/onboarding.js'
 import Modal from '../../components/Modal/Modal.jsx'
 import FallbackBanner from '../../components/FallbackBanner/FallbackBanner.jsx'
@@ -27,7 +27,7 @@ export default function OnboardingSchedule() {
     let cancelled = false
 
     async function load() {
-      const studentId = getStoredAuth()?.userId ?? MOCK_STUDENT_ID
+      const studentId = getCurrentStudentId()
       try {
         await api.enrollStudent(companyId, studentId)
         const data = await api.getOnboarding(companyId)
