@@ -21,6 +21,11 @@ export default function MissionDetail() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitFallback, setSubmitFallback] = useState(false)
+  const [validationError, setValidationError] = useState('')
+
+  useEffect(() => {
+    setValidationError('')
+  }, [submissionForm.content, fileName])
 
   useEffect(() => {
     let cancelled = false
@@ -86,8 +91,27 @@ export default function MissionDetail() {
     if (file) setFileName(file.name)
   }
 
+  function validateSubmission() {
+    if (mission.submissionType === 'text' && !submissionForm.content.trim()) {
+      return '내용을 입력해주세요.'
+    }
+    if (mission.submissionType === 'choice' && !submissionForm.content) {
+      return '선택지를 골라주세요.'
+    }
+    if (mission.submissionType === 'file' && !fileName) {
+      return '파일을 선택해주세요.'
+    }
+    return ''
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
+    const error = validateSubmission()
+    if (error) {
+      setValidationError(error)
+      return
+    }
+    setValidationError('')
     setIsSubmitting(true)
 
     if (!isMock && enrollmentId) {
@@ -175,6 +199,8 @@ export default function MissionDetail() {
             onChange={(e) => setSubmissionForm((prev) => ({ ...prev, memo: e.target.value }))}
             rows={3}
           />
+
+          {validationError && <p className={styles.validationError}>{validationError}</p>}
 
           <button type="submit" className={styles.submitButton} disabled={isSubmitting || submitted}>
             {submitted ? '제출 완료' : isSubmitting ? '제출 중...' : '제출하기'}
