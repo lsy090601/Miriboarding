@@ -36,6 +36,7 @@ async function fetchOnboardingRow(companyId) {
     .maybeSingle()
 
   if (error) {
+    console.error('[onboarding] fetchOnboardingRow 실패:', error)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '온보딩 정보 조회 중 오류가 발생했습니다.')
   }
   if (!data) {
@@ -53,6 +54,7 @@ async function saveMissions(companyId, missions) {
     .single()
 
   if (error) {
+    console.error('[onboarding] saveMissions 실패:', error)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '미션 정보 저장 중 오류가 발생했습니다.')
   }
   return data
@@ -96,6 +98,7 @@ export async function generateOnboarding({ companyId, jobTitle, companyName, tar
     .single()
 
   if (error) {
+    console.error('[onboarding] generateOnboarding - upsert 실패:', error)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '온보딩 정보 저장 중 오류가 발생했습니다.')
   }
 
@@ -150,6 +153,7 @@ export async function updateOnboarding(companyId, { schedules, missions, targetD
     .single()
 
   if (error) {
+    console.error('[onboarding] updateOnboarding 실패:', error)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '온보딩 정보 수정 중 오류가 발생했습니다.')
   }
 
@@ -232,6 +236,7 @@ export async function updateProgress(enrollmentId, progressPercent) {
     .single()
 
   if (error) {
+    console.error('[onboarding] updateProgress 실패:', error)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '진도 정보 저장 중 오류가 발생했습니다.')
   }
 
@@ -250,6 +255,7 @@ export async function enrollStudent(companyId, studentId) {
     .single()
 
   if (error) {
+    console.error('[onboarding] enrollStudent 실패:', error)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '등록 정보 저장 중 오류가 발생했습니다.')
   }
 
@@ -269,6 +275,7 @@ export async function getEnrollment(companyId, studentId) {
     .maybeSingle()
 
   if (error) {
+    console.error('[onboarding] getEnrollment 실패:', error)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '등록 정보 조회 중 오류가 발생했습니다.')
   }
   if (!data) {
@@ -290,6 +297,7 @@ export async function submitMission(enrollmentId, missionId, content) {
     .maybeSingle()
 
   if (enrollmentError) {
+    console.error('[onboarding] submitMission - enrollment 조회 실패:', enrollmentError)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '등록 정보 조회 중 오류가 발생했습니다.')
   }
   if (!enrollment) {
@@ -309,6 +317,7 @@ export async function submitMission(enrollmentId, missionId, content) {
     .single()
 
   if (error) {
+    console.error('[onboarding] submitMission - insert 실패:', error)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '미션 제출 저장 중 오류가 발생했습니다.')
   }
 
@@ -327,6 +336,7 @@ export async function listSubmissions(enrollmentId) {
     .order('submitted_at', { ascending: false })
 
   if (error) {
+    console.error('[onboarding] listSubmissions 실패:', error)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '제출 내역 조회 중 오류가 발생했습니다.')
   }
 
