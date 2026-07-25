@@ -14,8 +14,9 @@ const scheduleItemSchema = {
   properties: {
     time: { type: SchemaType.STRING, description: '일정 시점 (예: "09:00", "1일차", "1주차")' },
     activity: { type: SchemaType.STRING, description: '해당 시점에 진행할 활동 내용' },
+    importance: { type: SchemaType.STRING, format: 'enum', enum: ['low', 'medium', 'high'], description: '해당 일정의 중요도' },
   },
-  required: ['time', 'activity'],
+  required: ['time', 'activity', 'importance'],
 }
 
 const responseSchema = {
@@ -38,8 +39,19 @@ const responseSchema = {
         properties: {
           title: { type: SchemaType.STRING },
           description: { type: SchemaType.STRING },
+          submissionType: {
+            type: SchemaType.STRING,
+            format: 'enum',
+            enum: ['text', 'file', 'choice'],
+            description: '학생이 이 미션을 제출하는 방식',
+          },
+          options: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING },
+            description: 'submissionType이 choice일 때만 사용하는 선택지 목록 (그 외에는 빈 배열)',
+          },
         },
-        required: ['title', 'description'],
+        required: ['title', 'description', 'submissionType', 'options'],
       },
     },
   },
@@ -59,10 +71,10 @@ function buildPrompt(jobTitle, companyName) {
 "${companyName}"에 새로 입사한 "${jobTitle}" 직무 담당자를 위한 온보딩 계획을 한국어로 작성해주세요.
 
 다음 내용을 포함해야 합니다.
-- day: 입사 첫날 하루 동안 시간대별로 진행할 일정 (출근부터 퇴근까지, 4~6개 항목)
-- week: 입사 첫 주 동안 요일별로 진행할 일정 (5개 항목 내외)
-- month: 입사 첫 달 동안 주차별로 진행할 일정 (4개 항목 내외)
-- missions: 온보딩 기간 동안 직접 수행하며 실무를 익힐 수 있는 실습 미션 3개 (title, description)
+- day: 입사 첫날 하루 동안 시간대별로 진행할 일정 (출근부터 퇴근까지, 4~6개 항목). 각 항목마다 중요도(importance: low/medium/high)를 함께 판단해주세요.
+- week: 입사 첫 주 동안 요일별로 진행할 일정 (5개 항목 내외). 각 항목마다 importance 포함.
+- month: 입사 첫 달 동안 주차별로 진행할 일정 (4개 항목 내외). 각 항목마다 importance 포함.
+- missions: 온보딩 기간 동안 직접 수행하며 실무를 익힐 수 있는 실습 미션 3개 (title, description). 각 미션마다 제출 방식(submissionType: text/file/choice)을 정해주고, choice인 경우에만 options에 선택지 3~4개를 채워주세요 (text/file인 경우 options는 빈 배열).
 
 모든 일정과 미션은 "${jobTitle}" 직무의 실제 업무와 관련된 구체적인 내용으로 작성하고, 추상적인 표현은 피해주세요.`
 }

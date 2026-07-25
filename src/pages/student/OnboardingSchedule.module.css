@@ -86,6 +86,14 @@
   color: #333;
 }
 
+.scheduleSubtitle {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #999;
+  margin-bottom: 2px;
+}
+
 .importance {
   flex-shrink: 0;
   font-size: 12px;

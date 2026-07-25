@@ -8,6 +8,10 @@ import {
   updateMissionHandler,
   deleteMissionHandler,
   updateProgressHandler,
+  enrollHandler,
+  getEnrollmentHandler,
+  submitMissionHandler,
+  listSubmissionsHandler,
 } from '../controllers/onboarding.controller.js'
 
 const router = Router()
@@ -20,5 +24,9 @@ router.post('/:companyId/missions', createMissionHandler)
 router.put('/:companyId/missions/:missionId', updateMissionHandler)
 router.delete('/:companyId/missions/:missionId', deleteMissionHandler)
 router.put('/:enrollmentId/progress', updateProgressHandler)
+router.post('/:companyId/enroll', enrollHandler)
+router.get('/:companyId/enrollment/:studentId', getEnrollmentHandler)
+router.post('/enrollments/:enrollmentId/missions/:missionId/submissions', submitMissionHandler)
+router.get('/enrollments/:enrollmentId/submissions', listSubmissionsHandler)
 
 export default router

@@ -1,12 +1,54 @@
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import * as api from '../../lib/api.js'
+import { getStoredAuth, MOCK_STUDENT_ID } from '../../lib/auth.js'
 import { getOnboardingByCompanyId, getDDay, formatDate, getMissionProgress } from '../../mock/onboarding.js'
+import FallbackBanner from '../../components/FallbackBanner/FallbackBanner.jsx'
 import styles from './OnboardingHome.module.css'
 
 export default function OnboardingHome() {
   const { companyId } = useParams()
   const navigate = useNavigate()
 
-  const onboarding = getOnboardingByCompanyId(companyId)
+  const [onboarding, setOnboarding] = useState(null)
+  const [isMock, setIsMock] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      const studentId = getStoredAuth()?.userId ?? MOCK_STUDENT_ID
+      try {
+        const enrollment = await api.enrollStudent(companyId, studentId)
+        const data = await api.getOnboarding(companyId)
+        const { submissions } = await api.listSubmissions(enrollment.enrollmentId)
+        if (cancelled) return
+        setOnboarding(api.normalizeOnboardingResponse(companyId, data, submissions))
+        setIsMock(false)
+      } catch (error) {
+        console.error('온보딩 API 연동 실패, mock으로 폴백합니다:', error)
+        if (cancelled) return
+        setOnboarding(getOnboardingByCompanyId(companyId))
+        setIsMock(true)
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [companyId])
+
+  if (isLoading) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>불러오는 중...</div>
+      </div>
+    )
+  }
 
   if (!onboarding) {
     return (
@@ -23,7 +65,9 @@ export default function OnboardingHome() {
 
   const dDay = getDDay(onboarding.targetDate)
   const missionProgress = getMissionProgress(onboarding.missions)
-  const overallProgress = Math.round((missionProgress.completed / missionProgress.total) * 100)
+  const overallProgress = missionProgress.total
+    ? Math.round((missionProgress.completed / missionProgress.total) * 100)
+    : 0
 
   return (
     <div className={styles.page}>
@@ -31,6 +75,8 @@ export default function OnboardingHome() {
         <button type="button" className={styles.backButton} onClick={() => navigate('/student/home')}>
           ← 뒤로가기
         </button>
+
+        {isMock && <FallbackBanner />}
 
         <p className={styles.subtitle}>
           {onboarding.companyName} | {onboarding.jobTitle}

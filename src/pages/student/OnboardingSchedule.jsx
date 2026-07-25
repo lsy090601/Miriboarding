@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import * as api from '../../lib/api.js'
+import { getStoredAuth, MOCK_STUDENT_ID } from '../../lib/auth.js'
 import { getOnboardingByCompanyId, IMPORTANCE_LABEL } from '../../mock/onboarding.js'
 import Modal from '../../components/Modal/Modal.jsx'
+import FallbackBanner from '../../components/FallbackBanner/FallbackBanner.jsx'
 import styles from './OnboardingSchedule.module.css'
 
 const TABS = [
@@ -16,7 +19,44 @@ export default function OnboardingSchedule() {
   const [activeTab, setActiveTab] = useState('day')
   const [activeSchedule, setActiveSchedule] = useState(null)
 
-  const onboarding = getOnboardingByCompanyId(companyId)
+  const [onboarding, setOnboarding] = useState(null)
+  const [isMock, setIsMock] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      const studentId = getStoredAuth()?.userId ?? MOCK_STUDENT_ID
+      try {
+        await api.enrollStudent(companyId, studentId)
+        const data = await api.getOnboarding(companyId)
+        if (cancelled) return
+        setOnboarding(api.normalizeOnboardingResponse(companyId, data, []))
+        setIsMock(false)
+      } catch (error) {
+        console.error('온보딩 API 연동 실패, mock으로 폴백합니다:', error)
+        if (cancelled) return
+        setOnboarding(getOnboardingByCompanyId(companyId))
+        setIsMock(true)
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [companyId])
+
+  if (isLoading) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>불러오는 중...</div>
+      </div>
+    )
+  }
 
   if (!onboarding) {
     return (
@@ -44,6 +84,8 @@ export default function OnboardingSchedule() {
           ← 뒤로가기
         </button>
 
+        {isMock && <FallbackBanner />}
+
         <h1 className={styles.title}>{onboarding.companyName}의 {onboarding.jobTitle}</h1>
         <p className={styles.notice}>회사가 커스터마이징한 일정입니다</p>
 
@@ -68,7 +110,10 @@ export default function OnboardingSchedule() {
                 className={styles.scheduleItem}
                 onClick={() => setActiveSchedule(schedule)}
               >
-                <span className={styles.scheduleTitle}>{schedule.title}</span>
+                <span className={styles.scheduleTitle}>
+                  {schedule.subtitle && <span className={styles.scheduleSubtitle}>{schedule.subtitle}</span>}
+                  {schedule.title}
+                </span>
                 <span className={`${styles.importance} ${styles[`importance-${schedule.importance}`]}`}>
                   {IMPORTANCE_LABEL[schedule.importance]}
                 </span>

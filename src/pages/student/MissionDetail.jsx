@@ -1,19 +1,64 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import * as api from '../../lib/api.js'
+import { getStoredAuth, MOCK_STUDENT_ID } from '../../lib/auth.js'
 import { getOnboardingByCompanyId } from '../../mock/onboarding.js'
+import FallbackBanner from '../../components/FallbackBanner/FallbackBanner.jsx'
 import styles from './MissionDetail.module.css'
 
 export default function MissionDetail() {
   const { companyId, missionId } = useParams()
   const navigate = useNavigate()
 
+  const [onboarding, setOnboarding] = useState(null)
+  const [enrollmentId, setEnrollmentId] = useState(null)
+  const [isMock, setIsMock] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
   const [submissionForm, setSubmissionForm] = useState({ content: '', memo: '' })
   const [fileName, setFileName] = useState('')
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [submitFallback, setSubmitFallback] = useState(false)
 
-  const onboarding = getOnboardingByCompanyId(companyId)
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      const studentId = getStoredAuth()?.userId ?? MOCK_STUDENT_ID
+      try {
+        const enrollment = await api.enrollStudent(companyId, studentId)
+        const data = await api.getOnboarding(companyId)
+        const { submissions } = await api.listSubmissions(enrollment.enrollmentId)
+        if (cancelled) return
+        setEnrollmentId(enrollment.enrollmentId)
+        setOnboarding(api.normalizeOnboardingResponse(companyId, data, submissions))
+        setIsMock(false)
+      } catch (error) {
+        console.error('온보딩 API 연동 실패, mock으로 폴백합니다:', error)
+        if (cancelled) return
+        setOnboarding(getOnboardingByCompanyId(companyId))
+        setIsMock(true)
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [companyId])
+
+  if (isLoading) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>불러오는 중...</div>
+      </div>
+    )
+  }
+
   const mission = onboarding?.missions.find((m) => m.id === missionId)
 
   if (!onboarding || !mission) {
@@ -41,9 +86,22 @@ export default function MissionDetail() {
     if (file) setFileName(file.name)
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     setIsSubmitting(true)
+
+    if (!isMock && enrollmentId) {
+      try {
+        await api.submitMission(enrollmentId, missionId, submissionForm.content || fileName || submissionForm.memo)
+        setIsSubmitting(false)
+        setSubmitted(true)
+        return
+      } catch (error) {
+        console.error('미션 제출 API 실패, 로컬 시뮬레이션으로 폴백합니다:', error)
+        setSubmitFallback(true)
+      }
+    }
+
     setTimeout(() => {
       setIsSubmitting(false)
       setSubmitted(true)
@@ -61,6 +119,8 @@ export default function MissionDetail() {
           ← 뒤로가기
         </button>
 
+        {isMock && <FallbackBanner />}
+
         <h1 className={styles.title}>{mission.title}</h1>
         <p className={styles.description}>{mission.description}</p>
 
@@ -77,7 +137,7 @@ export default function MissionDetail() {
 
           {mission.submissionType === 'choice' && (
             <div className={styles.choiceList}>
-              {mission.options.map((option) => (
+              {(mission.options ?? []).map((option) => (
                 <label key={option} className={styles.choiceOption}>
                   <input
                     type="radio"
@@ -122,7 +182,12 @@ export default function MissionDetail() {
 
           <p className={styles.notice}>제출 후 회사가 검토합니다</p>
 
-          {submitted && <p className={styles.submittedMessage}>제출이 완료됐어요. 검토 결과를 기다려주세요.</p>}
+          {submitted && submitFallback && (
+            <p className={styles.fallbackNotice}>⚠️ 서버 저장에 실패해서 화면에서만 표시 중이에요.</p>
+          )}
+          {submitted && !submitFallback && (
+            <p className={styles.submittedMessage}>제출이 완료됐어요. 검토 결과를 기다려주세요.</p>
+          )}
         </form>
       </div>
     </div>
