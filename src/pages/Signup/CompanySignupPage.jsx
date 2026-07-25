@@ -12,7 +12,8 @@ import ReadOnlyField from '../../components/ReadOnlyField/ReadOnlyField.jsx'
 import { LockIcon, UserIcon, PencilIcon, PhoneIcon, CapIcon } from '../../components/icons/Icons.jsx'
 import { isValidEmail, isValidPassword, doPasswordsMatch, isRequired, isValidPhone } from '../../utils/validation.js'
 import { formatBizNumber } from '../../utils/format.js'
-import { verifyBusinessNumber, checkEmailExists } from '../../api/mockApi.js'
+import { checkEmailExists } from '../../api/mockApi.js'
+import * as api from '../../lib/api.js'
 import styles from './SignupForm.module.css'
 
 const POSITION_OPTIONS = ['사원', '주임', '대리', '과장', '차장', '부장', '이사', '대표']
@@ -41,6 +42,7 @@ export default function CompanySignupPage() {
   const [terms, setTerms] = useState({ tos: false, privacy: false, age: false })
   const [errors, setErrors] = useState({})
   const [submitted, setSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (step === 2 && verification?.status !== 'verified') {
@@ -58,11 +60,27 @@ export default function CompanySignupPage() {
     e.preventDefault()
     setVerifying(true)
     setBizError('')
-    const result = await verifyBusinessNumber(bizNumber)
-    setVerifying(false)
-    setVerification(result)
-    if (result.status === 'invalid') setBizError('사업자 번호 형식을 확인해주세요. (예: 123-45-67890)')
-    if (result.status === 'unavailable') setBizError('이미 등록되었거나 사용할 수 없는 사업자 번호입니다.')
+    try {
+      const result = await api.validateBusiness(bizNumber)
+      if (result.valid) {
+        setVerification({
+          status: 'verified',
+          company: {
+            companyName: result.company_name,
+            industry: result.industry,
+            foundedAt: result.founded_date,
+          },
+        })
+      } else {
+        setVerification({ status: 'invalid' })
+        setBizError('사업자 번호 형식을 확인해주세요. (예: 123-45-67890)')
+      }
+    } catch (error) {
+      setVerification({ status: 'invalid' })
+      setBizError(error.message ?? '사업자 번호 검증 중 오류가 발생했습니다.')
+    } finally {
+      setVerifying(false)
+    }
   }
 
   function handleGoToStep2() {
@@ -104,16 +122,32 @@ export default function CompanySignupPage() {
     return Object.keys(nextErrors).length === 0
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!validateContactForm()) return
-    console.log('company signup complete', {
-      bizNumber,
-      company: verification?.company,
-      ...contactForm,
-      terms,
-    })
-    setSubmitted(true)
+    setIsSubmitting(true)
+    try {
+      await api.signupCompany({
+        email: contactForm.email,
+        password: contactForm.password,
+        businessNumber: bizNumber,
+        company_name: verification?.company?.companyName,
+        industry: verification?.company?.industry,
+        founded_date: verification?.company?.foundedAt,
+        contact_name: contactForm.contactName,
+        contact_position: contactForm.position,
+        contact_phone: contactForm.companyPhone,
+      })
+      setSubmitted(true)
+    } catch (error) {
+      if (error.code === 'EMAIL_TAKEN') {
+        setErrors({ email: '이미 가입된 이메일입니다.' })
+      } else {
+        setErrors({ companyPhone: error.message ?? '회원가입 중 오류가 발생했습니다.' })
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (submitted) {
@@ -249,8 +283,8 @@ export default function CompanySignupPage() {
           icon={<PhoneIcon />}
         />
         <TermsCheckboxes value={terms} onChange={setTerms} error={errors.terms} />
-        <Button type="submit" variant="primary" className={styles.submit}>
-          가입 완료하기
+        <Button type="submit" variant="primary" className={styles.submit} disabled={isSubmitting}>
+          {isSubmitting ? '가입 처리 중...' : '가입 완료하기'}
         </Button>
         <button type="button" className={styles.backLink} onClick={() => setSearchParams({ step: '1' })}>
           ← 이전

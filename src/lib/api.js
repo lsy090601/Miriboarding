@@ -30,6 +30,47 @@ export function login(email, password) {
   })
 }
 
+export function validateBusiness(businessNumber) {
+  return apiFetch('/api/auth/validate-business', {
+    method: 'POST',
+    body: JSON.stringify({ businessNumber }),
+  })
+}
+
+export function signupStudent({ email, password, name, school, grade }) {
+  return apiFetch('/api/auth/signup/student', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, name, school, grade }),
+  })
+}
+
+export function signupCompany({
+  email,
+  password,
+  businessNumber,
+  company_name,
+  industry,
+  founded_date,
+  contact_name,
+  contact_position,
+  contact_phone,
+}) {
+  return apiFetch('/api/auth/signup/company', {
+    method: 'POST',
+    body: JSON.stringify({
+      email,
+      password,
+      businessNumber,
+      company_name,
+      industry,
+      founded_date,
+      contact_name,
+      contact_position,
+      contact_phone,
+    }),
+  })
+}
+
 export function getOnboarding(companyId) {
   return apiFetch(`/api/onboarding/${companyId}`)
 }
