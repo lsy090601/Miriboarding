@@ -13,7 +13,7 @@ export default function StudentHome() {
       setShowNotEnrolledModal(true)
       return
     }
-    navigate('/student/onboarding/home')
+    navigate('/student/onboarding/oo-logistics')
   }
 
   return (
