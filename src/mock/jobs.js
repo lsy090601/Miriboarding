@@ -4,6 +4,16 @@ export const IMPORTANCE_LABEL = {
   high: '높음',
 }
 
+// 프론트 라우트 슬러그 <-> 실제 DB(jobs_library.job_title) 매핑.
+// URL은 계속 친숙한 슬러그를 쓰고, 내부적으로만 실제 job_title로 변환해서 API를 호출한다.
+export const JOB_SLUG_META = {
+  backend: { title: '백엔드개발', icon: '⚙️', name: '백엔드 개발' },
+  frontend: { title: '프론트엔드개발', icon: '🎨', name: '프론트엔드 개발' },
+  logistics: { title: '물류관리', icon: '📦', name: '물류관리' },
+  data: { title: '데이터분석', icon: '📊', name: '데이터 분석' },
+  finance: { title: '금융시스템', icon: '💳', name: '금융시스템' },
+}
+
 export const jobs = [
   {
     id: 'backend',

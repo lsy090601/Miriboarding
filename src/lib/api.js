@@ -104,6 +104,14 @@ export function listSubmissions(enrollmentId) {
   return apiFetch(`/api/onboarding/enrollments/${enrollmentId}/submissions`)
 }
 
+export function listJobs() {
+  return apiFetch('/api/jobs')
+}
+
+export function getJobSchedule(jobId) {
+  return apiFetch(`/api/jobs/${jobId}`)
+}
+
 function mapScheduleItems(items, period, companyId) {
   return (items ?? []).map((item, index) => ({
     id: `${companyId}-${period}-${index}`,
@@ -138,5 +146,33 @@ export function normalizeOnboardingResponse(companyId, data, submissions) {
       options: mission.options,
       completed: completedMissionIds.has(mission.id),
     })),
+  }
+}
+
+function mapJobScheduleItems(items, period, jobId) {
+  return (items ?? []).map((item, index) => ({
+    id: `${jobId}-${period}-${index}`,
+    period,
+    title: item.activity,
+    subtitle: item.time,
+    importance: item.importance ?? 'medium',
+    description: item.activity,
+    terms: item.terms ?? [],
+  }))
+}
+
+// 실제 API 응답(GET /api/jobs/:jobId + jobs_library의 job 메타)을 src/mock/jobs.js와
+// 동일한 모양(schedules가 period 필드를 가진 평탄한 배열)으로 변환한다.
+export function normalizeJobScheduleResponse(job, data) {
+  return {
+    id: job.id,
+    icon: job.icon,
+    name: job.name,
+    tagline: job.tagline,
+    schedules: [
+      ...mapJobScheduleItems(data.schedules?.day, 'day', job.id),
+      ...mapJobScheduleItems(data.schedules?.week, 'week', job.id),
+      ...mapJobScheduleItems(data.schedules?.month, 'month', job.id),
+    ],
   }
 }
