@@ -36,14 +36,23 @@
   text-align: center;
 }
 
-.demoLink {
-  align-self: center;
-  margin-top: 8px;
-  background: none;
-  border: none;
-  padding: 0;
-  color: rgba(26, 42, 128, 0.5);
-  font-size: 12px;
-  text-decoration: underline;
-  cursor: pointer;
+.forgotBox {
+  margin-top: -4px;
+}
+
+.forgotForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.forgotSubmit {
+  width: 100%;
+}
+
+.forgotSent {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-primary);
+  text-align: center;
 }

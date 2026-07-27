@@ -6,7 +6,8 @@ import Button from "../../components/Button/Button.jsx";
 import { MailIcon, LockIcon } from "../../components/icons/Icons.jsx";
 import { isValidEmail, isRequired } from "../../utils/validation.js";
 import * as api from "../../lib/api.js";
-import { setStoredAuth, setDemoStudentSession } from "../../lib/auth.js";
+import { setStoredAuth } from "../../lib/auth.js";
+import { supabase } from "../../lib/supabaseClient.js";
 import styles from "./LoginPage.module.css";
 
 export default function LoginPage() {
@@ -15,6 +16,11 @@ export default function LoginPage() {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [companyNotice, setCompanyNotice] = useState(false);
+
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotStatus, setForgotStatus] = useState("idle");
+  const [forgotError, setForgotError] = useState("");
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -61,9 +67,30 @@ export default function LoginPage() {
     }
   }
 
-  function handleDemoLogin() {
-    setDemoStudentSession();
-    navigate("/student/home");
+  function handleToggleForgotPassword() {
+    setShowForgotPassword((prev) => !prev);
+    setForgotStatus("idle");
+    setForgotError("");
+    setForgotEmail(form.email);
+  }
+
+  async function handleForgotPasswordSubmit(e) {
+    e.preventDefault();
+    if (!isValidEmail(forgotEmail)) {
+      setForgotError("올바른 이메일 형식이 아닙니다.");
+      return;
+    }
+    setForgotStatus("sending");
+    setForgotError("");
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      setForgotStatus("idle");
+      setForgotError(error.message ?? "재설정 링크 발송 중 오류가 발생했습니다.");
+      return;
+    }
+    setForgotStatus("sent");
   }
 
   return (
@@ -108,17 +135,41 @@ export default function LoginPage() {
         <button
           type="button"
           className={styles.forgotLink}
-          onClick={() => console.log("forgot password clicked")}
+          onClick={handleToggleForgotPassword}
         >
           비밀번호를 잊으셨나요?
         </button>
-        <button
-          type="button"
-          className={styles.demoLink}
-          onClick={handleDemoLogin}
-        >
-          데모 학생 계정으로 체험하기
-        </button>
+
+        {showForgotPassword && (
+          <div className={styles.forgotBox}>
+            {forgotStatus === "sent" ? (
+              <p className={styles.forgotSent}>
+                {forgotEmail}로 재설정 링크를 보냈어요. 메일함을 확인해주세요.
+              </p>
+            ) : (
+              <div className={styles.forgotForm}>
+                <Input
+                  name="forgotEmail"
+                  type="email"
+                  placeholder="가입한 이메일을 입력해주세요"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  error={forgotError}
+                  icon={<MailIcon />}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={styles.forgotSubmit}
+                  disabled={forgotStatus === "sending"}
+                  onClick={handleForgotPasswordSubmit}
+                >
+                  {forgotStatus === "sending" ? "발송 중..." : "재설정 링크 보내기"}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </form>
     </AuthLayout>
   );
