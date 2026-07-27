@@ -39,7 +39,12 @@ async function createAuthUser(email, password) {
   return data.user
 }
 
-async function rollbackAuthUser(userId) {
+// authUser 생성 이후 단계(users/students/companies insert)에서 실패하면
+// auth 계정뿐 아니라 이미 insert된 public.users 행도 같이 지워야 한다.
+// public.users는 auth.users에 대한 FK cascade가 없어서, 이걸 안 지우면
+// 그 이메일로는 영영 재가입이 안 되는 좀비 행이 남는다.
+async function rollbackSignup(userId) {
+  await supabaseAdmin.from('users').delete().eq('id', userId).then(() => {}, () => {})
   await supabaseAdmin.auth.admin.deleteUser(userId).catch(() => {})
 }
 
@@ -66,7 +71,8 @@ export async function signupStudent({ email, password, name, school, grade }) {
     user_type: 'student',
   })
   if (usersError) {
-    await rollbackAuthUser(authUser.id)
+    console.error('users insert 실패(student):', usersError)
+    await rollbackSignup(authUser.id)
     throw new AuthError(502, 'SUPABASE_ERROR', '사용자 정보 저장 중 오류가 발생했습니다.')
   }
 
@@ -77,7 +83,8 @@ export async function signupStudent({ email, password, name, school, grade }) {
     grade,
   })
   if (studentsError) {
-    await rollbackAuthUser(authUser.id)
+    console.error('students insert 실패:', studentsError)
+    await rollbackSignup(authUser.id)
     throw new AuthError(502, 'SUPABASE_ERROR', '학생 정보 저장 중 오류가 발생했습니다.')
   }
 
@@ -118,7 +125,8 @@ export async function signupCompany({
     user_type: 'company',
   })
   if (usersError) {
-    await rollbackAuthUser(authUser.id)
+    console.error('users insert 실패(company):', usersError)
+    await rollbackSignup(authUser.id)
     throw new AuthError(502, 'SUPABASE_ERROR', '사용자 정보 저장 중 오류가 발생했습니다.')
   }
 
@@ -133,7 +141,11 @@ export async function signupCompany({
     contact_phone: isNonEmptyString(contact_phone) ? contact_phone : null,
   })
   if (companiesError) {
-    await rollbackAuthUser(authUser.id)
+    await rollbackSignup(authUser.id)
+    if (companiesError.code === '23505' && /business_number/.test(companiesError.message ?? '')) {
+      throw new AuthError(409, 'BUSINESS_NUMBER_TAKEN', '이미 가입된 사업자등록번호입니다.')
+    }
+    console.error('companies insert 실패:', companiesError)
     throw new AuthError(502, 'SUPABASE_ERROR', '회사 정보 저장 중 오류가 발생했습니다.')
   }
 
