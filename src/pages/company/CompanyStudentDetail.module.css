@@ -88,22 +88,44 @@
   color: #aaa;
 }
 
-.feedbackSection {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+.missionCard {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.missionContent {
+  font-size: 13px;
+  color: #666;
+  background: #f8f9fb;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 0;
+}
+
+.existingFeedback {
+  font-size: 13px;
+  color: #d4845a;
+  margin: 0;
+}
+
+.feedbackRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .feedbackInput {
   width: 100%;
-  min-height: 80px;
+  min-height: 60px;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 14px;
   resize: vertical;
-  margin-bottom: 10px;
 }
 
 .sendButton {

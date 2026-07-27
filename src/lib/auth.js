@@ -30,3 +30,10 @@ export function getCurrentStudentId() {
   if (auth?.userType === 'student' && auth.userId) return auth.userId
   return MOCK_STUDENT_ID
 }
+
+// 회사 계정으로 로그인했을 때만 그 id를 쓰고, 아니면 데모 회사 id로 폴백한다.
+export function getCurrentCompanyId() {
+  const auth = getStoredAuth()
+  if (auth?.userType === 'company' && auth.userId) return auth.userId
+  return DEMO_COMPANY_ID
+}

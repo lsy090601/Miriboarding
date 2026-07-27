@@ -1,20 +1,34 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import * as api from "../../lib/api.js";
+import { getCurrentCompanyId } from "../../lib/auth.js";
 import styles from "./CompanyStudentRegister.module.css";
 
 export default function CompanyStudentRegister() {
   const navigate = useNavigate();
   const [emailInput, setEmailInput] = useState("");
   const [result, setResult] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleRegister() {
+  async function handleRegister() {
     const emails = emailInput
       .split("\n")
       .map((email) => email.trim())
       .filter(Boolean);
 
-    // TODO: API 연결 시 여기서 POST 요청, 지금은 임시로 전부 성공 처리
-    setResult({ success: emails.length, failed: 0 });
+    if (emails.length === 0) return;
+
+    setIsSubmitting(true);
+    try {
+      const companyId = getCurrentCompanyId();
+      const data = await api.registerStudentsByEmail(companyId, emails);
+      setResult({ success: data.success, failed: data.failed, failedEmails: data.failedEmails ?? [] });
+    } catch (error) {
+      console.error("학생 등록 API 실패:", error);
+      setResult({ success: 0, failed: emails.length, failedEmails: emails });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -31,7 +45,7 @@ export default function CompanyStudentRegister() {
         <h1 className={styles.title}>학생 이메일 등록</h1>
         <p className={styles.desc}>
           일괄로 학생 이메일을 등록하면 학생들이 자동으로 온보딩을 시작할 수
-          있습니다.
+          있습니다. (미리보딩에 학생으로 가입된 이메일만 등록됩니다)
         </p>
 
         <textarea
@@ -57,14 +71,20 @@ export default function CompanyStudentRegister() {
             type="button"
             className={styles.registerButton}
             onClick={handleRegister}
+            disabled={isSubmitting}
           >
-            등록하기
+            {isSubmitting ? "등록 중..." : "등록하기"}
           </button>
         </div>
 
         {result && (
           <div className={styles.resultBox}>
             성공 {result.success}건 / 실패 {result.failed}건
+            {result.failedEmails.length > 0 && (
+              <p className={styles.failedList}>
+                실패: {result.failedEmails.join(", ")} (가입되지 않은 이메일일 수 있어요)
+              </p>
+            )}
           </div>
         )}
       </div>
