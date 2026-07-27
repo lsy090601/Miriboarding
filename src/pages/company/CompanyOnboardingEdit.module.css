@@ -1,0 +1,137 @@
+.page {
+  min-height: 100vh;
+  padding: 32px 20px;
+  background: #f8f9fb;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.backButton {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 12px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.tabRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tabButton {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tabButtonActive {
+  background: #d4845a;
+  color: #fff;
+  border-color: #d4845a;
+}
+
+.scheduleSection,
+.missionSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.scheduleRow {
+  display: grid;
+  grid-template-columns: 110px 1fr 90px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  background: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.missionCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #fff;
+  padding: 14px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.input,
+.smallInput,
+.textarea {
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+.deleteButton {
+  background: none;
+  border: none;
+  color: #d33;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.addButton {
+  align-self: flex-start;
+  background: none;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+}
+
+.footerButtons {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.cancelButton,
+.saveButton {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancelButton {
+  background: #fff;
+  border: 1px solid #ddd;
+}
+
+.saveButton {
+  background: #d4845a;
+  color: #fff;
+  border: none;
+}

@@ -1,0 +1,84 @@
+.page {
+  min-height: 100vh;
+  padding: 32px 20px;
+  background: #f8f9fb;
+}
+
+.container {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.backButton {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  margin-top: 16px;
+}
+
+.select,
+.input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.infoBox {
+  background: #fff7f2;
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 24px;
+}
+
+.infoTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #d4845a;
+  margin-bottom: 8px;
+}
+
+.infoList {
+  font-size: 12px;
+  color: #888;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.generateButton {
+  width: 100%;
+  padding: 14px;
+  background: #d4845a;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 24px;
+}
+
+.generateButton:disabled {
+  background: #ddd;
+  cursor: not-allowed;
+}
