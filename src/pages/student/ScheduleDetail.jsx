@@ -4,6 +4,7 @@ import * as api from '../../lib/api.js'
 import { getJobById, getScheduleById, IMPORTANCE_LABEL, JOB_SLUG_META } from '../../mock/jobs.js'
 import Modal from '../../components/Modal/Modal.jsx'
 import FallbackBanner from '../../components/FallbackBanner/FallbackBanner.jsx'
+import Nav from '../../components/Nav/Nav.jsx'
 import styles from './ScheduleDetail.module.css'
 
 export default function ScheduleDetail() {
@@ -52,9 +53,12 @@ export default function ScheduleDetail() {
 
   if (isLoading) {
     return (
-      <div className={styles.page}>
-        <div className={styles.container}>불러오는 중...</div>
-      </div>
+      <>
+        <Nav />
+        <div className={styles.page}>
+          <div className={styles.container}>불러오는 중...</div>
+        </div>
+      </>
     )
   }
 
@@ -62,26 +66,31 @@ export default function ScheduleDetail() {
 
   if (!job || !schedule) {
     return (
-      <div className={styles.page}>
-        <div className={styles.container}>
-          <button type="button" className={styles.backButton} onClick={() => navigate('/student/explore')}>
-            ← 뒤로가기
-          </button>
-          <p>존재하지 않는 일정이에요.</p>
+      <>
+        <Nav />
+        <div className={styles.page}>
+          <div className={styles.container}>
+            <button type="button" className={styles.backButton} onClick={() => navigate('/student/explore')}>
+              직무 선택으로 돌아가기
+            </button>
+            <p>존재하지 않는 일정이에요.</p>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
   return (
-    <div className={styles.page}>
+    <>
+      <Nav />
+      <div className={styles.page}>
       <div className={styles.container}>
         <button
           type="button"
           className={styles.backButton}
           onClick={() => navigate(`/student/explore/${job.id}`)}
         >
-          ← 뒤로가기
+          직무 일정으로 돌아가기
         </button>
 
         {isMock && <FallbackBanner />}
@@ -115,6 +124,7 @@ export default function ScheduleDetail() {
           <p>{activeTerm.description}</p>
         </Modal>
       )}
-    </div>
+      </div>
+    </>
   )
 }
