@@ -5,6 +5,7 @@ import { getCurrentStudentId } from '../../lib/auth.js'
 import { getOnboardingByCompanyId, IMPORTANCE_LABEL } from '../../mock/onboarding.js'
 import Modal from '../../components/Modal/Modal.jsx'
 import FallbackBanner from '../../components/FallbackBanner/FallbackBanner.jsx'
+import Nav from '../../components/Nav/Nav.jsx'
 import styles from './OnboardingSchedule.module.css'
 
 const TABS = [
@@ -52,29 +53,37 @@ export default function OnboardingSchedule() {
 
   if (isLoading) {
     return (
-      <div className={styles.page}>
-        <div className={styles.container}>불러오는 중...</div>
-      </div>
+      <>
+        <Nav />
+        <div className={styles.page}>
+          <div className={styles.container}>불러오는 중...</div>
+        </div>
+      </>
     )
   }
 
   if (!onboarding) {
     return (
-      <div className={styles.page}>
-        <div className={styles.container}>
-          <button type="button" className={styles.backButton} onClick={() => navigate('/student/home')}>
-            ← 뒤로가기
-          </button>
-          <p>존재하지 않는 온보딩이에요.</p>
+      <>
+        <Nav />
+        <div className={styles.page}>
+          <div className={styles.container}>
+            <button type="button" className={styles.backButton} onClick={() => navigate('/student/home')}>
+              ← 뒤로가기
+            </button>
+            <p>존재하지 않는 온보딩이에요.</p>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
   const schedules = onboarding.schedules[activeTab]
 
   return (
-    <div className={styles.page}>
+    <>
+      <Nav />
+      <div className={styles.page}>
       <div className={styles.container}>
         <button
           type="button"
@@ -128,6 +137,7 @@ export default function OnboardingSchedule() {
           <p>{activeSchedule.description}</p>
         </Modal>
       )}
-    </div>
+      </div>
+    </>
   )
 }

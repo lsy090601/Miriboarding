@@ -4,6 +4,7 @@ import * as api from '../../lib/api.js'
 import { getCurrentStudentId } from '../../lib/auth.js'
 import { getOnboardingByCompanyId, getDDay, formatDate, getMissionProgress } from '../../mock/onboarding.js'
 import FallbackBanner from '../../components/FallbackBanner/FallbackBanner.jsx'
+import Nav from '../../components/Nav/Nav.jsx'
 import styles from './OnboardingHome.module.css'
 
 export default function OnboardingHome() {
@@ -44,22 +45,28 @@ export default function OnboardingHome() {
 
   if (isLoading) {
     return (
-      <div className={styles.page}>
-        <div className={styles.container}>불러오는 중...</div>
-      </div>
+      <>
+        <Nav />
+        <div className={styles.page}>
+          <div className={styles.container}>불러오는 중...</div>
+        </div>
+      </>
     )
   }
 
   if (!onboarding) {
     return (
-      <div className={styles.page}>
-        <div className={styles.container}>
-          <button type="button" className={styles.backButton} onClick={() => navigate('/student/home')}>
-            ← 뒤로가기
-          </button>
-          <p>존재하지 않는 온보딩이에요.</p>
+      <>
+        <Nav />
+        <div className={styles.page}>
+          <div className={styles.container}>
+            <button type="button" className={styles.backButton} onClick={() => navigate('/student/home')}>
+              ← 뒤로가기
+            </button>
+            <p>존재하지 않는 온보딩이에요.</p>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
@@ -70,7 +77,9 @@ export default function OnboardingHome() {
     : 0
 
   return (
-    <div className={styles.page}>
+    <>
+      <Nav />
+      <div className={styles.page}>
       <div className={styles.container}>
         <button type="button" className={styles.backButton} onClick={() => navigate('/student/home')}>
           ← 뒤로가기
@@ -127,6 +136,7 @@ export default function OnboardingHome() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

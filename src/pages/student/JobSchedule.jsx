@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import * as api from '../../lib/api.js'
 import { getJobById, IMPORTANCE_LABEL, JOB_SLUG_META } from '../../mock/jobs.js'
 import FallbackBanner from '../../components/FallbackBanner/FallbackBanner.jsx'
+import Nav from '../../components/Nav/Nav.jsx'
 import styles from './JobSchedule.module.css'
 
 const TABS = [
@@ -57,32 +58,40 @@ export default function JobSchedule() {
 
   if (isLoading) {
     return (
-      <div className={styles.page}>
-        <div className={styles.container}>불러오는 중...</div>
-      </div>
+      <>
+        <Nav />
+        <div className={styles.page}>
+          <div className={styles.container}>불러오는 중...</div>
+        </div>
+      </>
     )
   }
 
   if (!job) {
     return (
-      <div className={styles.page}>
-        <div className={styles.container}>
-          <button type="button" className={styles.backButton} onClick={() => navigate('/student/explore')}>
-            ← 뒤로가기
-          </button>
-          <p>존재하지 않는 직무예요.</p>
+      <>
+        <Nav />
+        <div className={styles.page}>
+          <div className={styles.container}>
+            <button type="button" className={styles.backButton} onClick={() => navigate('/student/explore')}>
+              직무 선택으로 돌아가기
+            </button>
+            <p>존재하지 않는 직무예요.</p>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
   const schedules = job.schedules.filter((schedule) => schedule.period === activeTab)
 
   return (
-    <div className={styles.page}>
+    <>
+      <Nav />
+      <div className={styles.page}>
       <div className={styles.container}>
         <button type="button" className={styles.backButton} onClick={() => navigate('/student/explore')}>
-          ← 뒤로가기
+          직무 선택으로 돌아가기
         </button>
 
         {isMock && <FallbackBanner />}
@@ -91,6 +100,7 @@ export default function JobSchedule() {
           <span className={styles.icon}>{job.icon}</span>
           <h1 className={styles.title}>{job.name}</h1>
         </div>
+        <p className={styles.subtitle}>하루/주/달의 일정을 탭으로 전환하며 확인해보세요</p>
 
         <div className={styles.tabs}>
           {TABS.map((tab) => (
@@ -122,6 +132,7 @@ export default function JobSchedule() {
           ))}
         </ul>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

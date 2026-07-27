@@ -54,3 +54,28 @@
 .body p:last-child {
   margin-bottom: 0;
 }
+
+.closeLink {
+  display: block;
+  border: none;
+  background: none;
+  padding: 0;
+  margin-bottom: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.bodyCentered {
+  padding: 24px 0;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.7;
+  color: #333;
+}
+
+.bodyCentered p {
+  margin: 0;
+}
