@@ -1,14 +1,30 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Modal from '../../components/Modal/Modal.jsx'
 import Nav from '../../components/Nav/Nav.jsx'
-import { DEMO_COMPANY_ID } from '../../lib/auth.js'
+import * as api from '../../lib/api.js'
+import { DEMO_COMPANY_ID, getCurrentStudentId } from '../../lib/auth.js'
 import styles from './StudentHome.module.css'
 
 export default function StudentHome() {
   const navigate = useNavigate()
-  const [isEnrolled] = useState(false)
+  const [isEnrolled, setIsEnrolled] = useState(false)
   const [showNotEnrolledModal, setShowNotEnrolledModal] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    api
+      .getEnrollment(DEMO_COMPANY_ID, getCurrentStudentId())
+      .then(() => {
+        if (!cancelled) setIsEnrolled(true)
+      })
+      .catch(() => {
+        if (!cancelled) setIsEnrolled(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   function handleOnboardingClick() {
     if (!isEnrolled) {
