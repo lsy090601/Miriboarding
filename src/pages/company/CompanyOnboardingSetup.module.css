@@ -81,3 +81,10 @@
   background: #ddd;
   cursor: not-allowed;
 }
+
+.errorText {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: #c62828;
+  text-align: center;
+}
