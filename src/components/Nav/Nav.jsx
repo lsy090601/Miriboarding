@@ -1,11 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { UserIcon } from '../icons/Icons.jsx'
 import Modal from '../Modal/Modal.jsx'
-import { clearStoredAuth, DEMO_COMPANY_ID } from '../../lib/auth.js'
+import * as api from '../../lib/api.js'
+import { clearStoredAuth, DEMO_COMPANY_ID, getCurrentStudentId } from '../../lib/auth.js'
 import styles from './Nav.module.css'
-
-const IS_ENROLLED = false
 
 const NAV_ITEMS = [
   { key: 'home', label: '홈', path: '/student/home', match: (p) => p === '/student/home' },
@@ -28,6 +27,22 @@ export default function Nav() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const [showNotEnrolledModal, setShowNotEnrolledModal] = useState(false)
+  const [isEnrolled, setIsEnrolled] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    api
+      .getEnrollment(DEMO_COMPANY_ID, getCurrentStudentId())
+      .then(() => {
+        if (!cancelled) setIsEnrolled(true)
+      })
+      .catch(() => {
+        if (!cancelled) setIsEnrolled(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   function handleLogout() {
     clearStoredAuth()
@@ -35,7 +50,7 @@ export default function Nav() {
   }
 
   function handleNavClick(item) {
-    if (item.guarded && !IS_ENROLLED) {
+    if (item.guarded && !isEnrolled) {
       setShowNotEnrolledModal(true)
       return
     }
