@@ -1,4 +1,4 @@
-import { AuthError, validateBusiness, signupStudent, signupCompany, login } from '../services/auth.service.js'
+import { AuthError, validateBusiness, signupStudent, signupCompany, login, getCompanyProfile } from '../services/auth.service.js'
 import { isNonEmptyString } from '../utils/validation.js'
 
 function handleError(res, error) {
@@ -30,6 +30,15 @@ export async function signupCompanyHandler(req, res) {
   try {
     const { company_id } = await signupCompany(req.body)
     return res.status(201).json({ success: true, company_id })
+  } catch (error) {
+    return handleError(res, error)
+  }
+}
+
+export async function getCompanyProfileHandler(req, res) {
+  try {
+    const result = await getCompanyProfile(req.params.companyId)
+    return res.status(200).json(result)
   } catch (error) {
     return handleError(res, error)
   }

@@ -71,6 +71,10 @@ export function signupCompany({
   })
 }
 
+export function getCompanyProfile(companyId) {
+  return apiFetch(`/api/auth/company/${companyId}`)
+}
+
 export function getOnboarding(companyId) {
   return apiFetch(`/api/onboarding/${companyId}`)
 }

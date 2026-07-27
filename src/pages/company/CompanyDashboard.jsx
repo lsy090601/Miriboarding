@@ -25,13 +25,14 @@ export default function CompanyDashboard() {
     async function load() {
       const companyId = getCurrentCompanyId();
       try {
-        const { students } = await api.listEnrolledStudents(companyId);
+        const [{ students }, profile] = await Promise.all([
+          api.listEnrolledStudents(companyId),
+          api.getCompanyProfile(companyId),
+        ]);
 
-        let companyName = "";
         let activeOnboardings = 0;
         try {
-          const onboarding = await api.getOnboarding(companyId);
-          companyName = onboarding.companyName ?? "";
+          await api.getOnboarding(companyId);
           activeOnboardings = 1;
         } catch (err) {
           if (err.code !== "NOT_FOUND") throw err;
@@ -43,7 +44,7 @@ export default function CompanyDashboard() {
 
         if (cancelled) return;
         setDashboard({
-          companyName: companyName || "미리보딩",
+          companyName: profile.companyName,
           registeredStudents: students.length,
           missionCompletionRate,
           activeOnboardings,

@@ -152,6 +152,24 @@ export async function signupCompany({
   return { company_id: authUser.id }
 }
 
+export async function getCompanyProfile(companyId) {
+  const { data, error } = await supabaseAdmin
+    .from('companies')
+    .select('company_name')
+    .eq('id', companyId)
+    .maybeSingle()
+
+  if (error) {
+    console.error('[auth] getCompanyProfile 실패:', error)
+    throw new AuthError(502, 'SUPABASE_ERROR', '회사 정보 조회 중 오류가 발생했습니다.')
+  }
+  if (!data) {
+    throw new AuthError(404, 'NOT_FOUND', '회사 정보를 찾을 수 없습니다.')
+  }
+
+  return { companyName: data.company_name }
+}
+
 export async function login({ email, password }) {
   if (!isValidEmail(email)) throw new AuthError(400, 'INVALID_EMAIL', '이메일 형식이 올바르지 않습니다.')
   if (!isNonEmptyString(password)) throw new AuthError(400, 'INVALID_PASSWORD', '비밀번호를 입력해주세요.')
