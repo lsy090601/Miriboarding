@@ -55,10 +55,6 @@ export default function CompanyStudentRegister() {
           onChange={(e) => setEmailInput(e.target.value)}
         />
 
-        <p className={styles.tip}>
-          💡 팁: 엑셀 파일의 이메일 열을 모두 선택 → 복사 → 붙이기
-        </p>
-
         <div className={styles.buttonRow}>
           <button
             type="button"

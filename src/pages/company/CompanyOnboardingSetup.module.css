@@ -33,8 +33,7 @@
   margin-top: 16px;
 }
 
-.select,
-.input {
+.select {
   width: 100%;
   padding: 12px;
   border: 1px solid #ddd;
@@ -43,7 +42,7 @@
 }
 
 .infoBox {
-  background: #fff7f2;
+  background: #eef0fa;
   border-radius: 10px;
   padding: 16px;
   margin-top: 24px;
@@ -52,7 +51,7 @@
 .infoTitle {
   font-size: 13px;
   font-weight: 700;
-  color: #d4845a;
+  color: var(--color-primary);
   margin-bottom: 8px;
 }
 
@@ -68,7 +67,7 @@
 .generateButton {
   width: 100%;
   padding: 14px;
-  background: #d4845a;
+  background: var(--color-primary);
   color: #fff;
   border: none;
   border-radius: 10px;
