@@ -28,6 +28,7 @@ export default function CompanySignupPage() {
   const [verification, setVerification] = useState(null)
   const [verifying, setVerifying] = useState(false)
   const [bizError, setBizError] = useState('')
+  const [companyInfo, setCompanyInfo] = useState({ companyName: '', industry: '', foundedAt: '' })
 
   const [contactForm, setContactForm] = useState({
     contactName: state?.name ?? '',
@@ -53,7 +54,13 @@ export default function CompanySignupPage() {
   function handleBizNumberChange(e) {
     setBizNumber(formatBizNumber(e.target.value))
     setVerification(null)
+    setCompanyInfo({ companyName: '', industry: '', foundedAt: '' })
     setBizError('')
+  }
+
+  function handleCompanyInfoChange(e) {
+    const { name, value } = e.target
+    setCompanyInfo((prev) => ({ ...prev, [name]: value }))
   }
 
   async function handleVerify(e) {
@@ -63,13 +70,11 @@ export default function CompanySignupPage() {
     try {
       const result = await api.validateBusiness(bizNumber)
       if (result.valid) {
-        setVerification({
-          status: 'verified',
-          company: {
-            companyName: result.company_name,
-            industry: result.industry,
-            foundedAt: result.founded_date,
-          },
+        setVerification({ status: 'verified' })
+        setCompanyInfo({
+          companyName: result.company_name,
+          industry: result.industry,
+          foundedAt: result.founded_date,
         })
       } else {
         setVerification({ status: 'invalid' })
@@ -131,9 +136,9 @@ export default function CompanySignupPage() {
         email: contactForm.email,
         password: contactForm.password,
         businessNumber: bizNumber,
-        company_name: verification?.company?.companyName,
-        industry: verification?.company?.industry,
-        founded_date: verification?.company?.foundedAt,
+        company_name: companyInfo.companyName,
+        industry: companyInfo.industry,
+        founded_date: companyInfo.foundedAt,
         contact_name: contactForm.contactName,
         contact_position: contactForm.position,
         contact_phone: contactForm.companyPhone,
@@ -195,9 +200,30 @@ export default function CompanySignupPage() {
 
           {verification?.status === 'verified' && (
             <div className={styles.sectionGroup}>
-              <ReadOnlyField label="회사명" value={verification.company.companyName} icon={<PencilIcon />} />
-              <ReadOnlyField label="업종" value={verification.company.industry} icon={<PencilIcon />} />
-              <ReadOnlyField label="설립일" value={verification.company.foundedAt} icon={<PencilIcon />} />
+              <Input
+                name="companyName"
+                type="text"
+                placeholder="회사명"
+                value={companyInfo.companyName}
+                onChange={handleCompanyInfoChange}
+                icon={<PencilIcon />}
+              />
+              <Input
+                name="industry"
+                type="text"
+                placeholder="업종"
+                value={companyInfo.industry}
+                onChange={handleCompanyInfoChange}
+                icon={<PencilIcon />}
+              />
+              <Input
+                name="foundedAt"
+                type="date"
+                placeholder="설립일"
+                value={companyInfo.foundedAt}
+                onChange={handleCompanyInfoChange}
+                icon={<PencilIcon />}
+              />
             </div>
           )}
 
@@ -222,9 +248,9 @@ export default function CompanySignupPage() {
     <AuthLayout>
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.sectionGroup}>
-          <ReadOnlyField label="회사명" value={verification?.company?.companyName} icon={<PencilIcon />} />
-          <ReadOnlyField label="업종" value={verification?.company?.industry} icon={<PencilIcon />} />
-          <ReadOnlyField label="설립일" value={verification?.company?.foundedAt} icon={<PencilIcon />} />
+          <ReadOnlyField label="회사명" value={companyInfo.companyName} icon={<PencilIcon />} />
+          <ReadOnlyField label="업종" value={companyInfo.industry} icon={<PencilIcon />} />
+          <ReadOnlyField label="설립일" value={companyInfo.foundedAt} icon={<PencilIcon />} />
         </div>
         <Input
           name="contactName"

@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import AuthLayout from '../../components/AuthLayout/AuthLayout.jsx'
 import Input from '../../components/Input/Input.jsx'
-import Select from '../../components/Select/Select.jsx'
 import Button from '../../components/Button/Button.jsx'
 import DuplicateCheckField from '../../components/DuplicateCheckField/DuplicateCheckField.jsx'
 import PasswordStrengthMeter from '../../components/PasswordStrengthMeter/PasswordStrengthMeter.jsx'
@@ -13,9 +12,6 @@ import { checkEmailExists } from '../../api/mockApi.js'
 import * as api from '../../lib/api.js'
 import styles from './SignupForm.module.css'
 
-const SCHOOL_OPTIONS = ['서울고등학교', '미리고등학교', '한빛고등학교', '기타']
-const GRADE_OPTIONS = ['1학년', '2학년', '3학년']
-
 export default function StudentSignupPage() {
   const { state } = useLocation()
   const [form, setForm] = useState({
@@ -24,7 +20,7 @@ export default function StudentSignupPage() {
     confirmPassword: state?.confirmPassword ?? '',
     name: state?.name ?? '',
     school: '',
-    grade: '',
+    age: '',
   })
   const [emailCheck, setEmailCheck] = useState(null)
   const [checkingEmail, setCheckingEmail] = useState(false)
@@ -58,8 +54,10 @@ export default function StudentSignupPage() {
     if (!isValidPassword(form.password)) nextErrors.password = '비밀번호는 8자 이상이어야 합니다.'
     if (!doPasswordsMatch(form.password, form.confirmPassword)) nextErrors.confirmPassword = '비밀번호가 일치하지 않습니다.'
     if (!isRequired(form.name)) nextErrors.name = '이름을 입력해주세요.'
-    if (!isRequired(form.school)) nextErrors.school = '학교를 선택해주세요.'
-    if (!isRequired(form.grade)) nextErrors.grade = '학년을 선택해주세요.'
+    if (!isRequired(form.school)) nextErrors.school = '학교를 입력해주세요.'
+    if (!isRequired(String(form.age))) nextErrors.age = '나이를 입력해주세요.'
+    else if (!Number.isInteger(Number(form.age)) || Number(form.age) <= 0)
+      nextErrors.age = '올바른 나이를 입력해주세요.'
     if (!terms.tos || !terms.privacy || !terms.age) nextErrors.terms = '약관에 모두 동의해주세요.'
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
@@ -75,7 +73,7 @@ export default function StudentSignupPage() {
         password: form.password,
         name: form.name,
         school: form.school,
-        grade: form.grade,
+        age: Number(form.age),
       })
       setSubmitted(true)
     } catch (error) {
@@ -148,22 +146,22 @@ export default function StudentSignupPage() {
           icon={<UserIcon />}
           autoComplete="name"
         />
-        <Select
+        <Input
           name="school"
+          type="text"
+          placeholder="학교를 입력하세요"
           value={form.school}
           onChange={handleChange}
-          options={SCHOOL_OPTIONS}
-          placeholder="학교를 선택하세요"
           error={errors.school}
           icon={<CapIcon />}
         />
-        <Select
-          name="grade"
-          value={form.grade}
+        <Input
+          name="age"
+          type="number"
+          placeholder="나이를 입력하세요"
+          value={form.age}
           onChange={handleChange}
-          options={GRADE_OPTIONS}
-          placeholder="학년을 선택하세요"
-          error={errors.grade}
+          error={errors.age}
           icon={<CapIcon />}
         />
         <TermsCheckboxes value={terms} onChange={setTerms} error={errors.terms} />
