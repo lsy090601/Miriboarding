@@ -6,11 +6,10 @@ import styles from "./CompanyOnboardingSetup.module.css";
 export default function CompanyOnboardingSetup() {
   const navigate = useNavigate();
   const [jobTitle, setJobTitle] = useState("");
-  const [companyName, setCompanyName] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
   function handleGenerate() {
-    if (!jobTitle || !companyName) return;
+    if (!jobTitle) return;
     setIsGenerating(true);
     // TODO: API 연결 시 POST /api/onboarding/generate 호출 (Claude API)
     setTimeout(() => {
@@ -46,21 +45,12 @@ export default function CompanyOnboardingSetup() {
           ))}
         </select>
 
-        <label className={styles.label}>회사명</label>
-        <input
-          className={styles.input}
-          type="text"
-          placeholder="예: OO물류"
-          value={companyName}
-          onChange={(e) => setCompanyName(e.target.value)}
-        />
-
         <div className={styles.infoBox}>
           <p className={styles.infoTitle}>
             AI가 데이터를 분석하여 타임라인을 생성합니다
           </p>
           <ul className={styles.infoList}>
-            <li>채용공고, NCS 표준 데이터를 분석해요</li>
+            <li>임금직업정보(워크넷)에서 찾은 실제 직무 자료를 분석해요</li>
             <li>하루/1주/1달 일정을 자동으로 만들어요</li>
             <li>직무 관련 용어 사전도 함께 생성돼요</li>
           </ul>
@@ -69,7 +59,7 @@ export default function CompanyOnboardingSetup() {
         <button
           type="button"
           className={styles.generateButton}
-          disabled={!jobTitle || !companyName || isGenerating}
+          disabled={!jobTitle || isGenerating}
           onClick={handleGenerate}
         >
           {isGenerating ? "생성 중..." : "자동 생성 시작"}

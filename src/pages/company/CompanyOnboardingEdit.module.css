@@ -41,9 +41,9 @@
 }
 
 .tabButtonActive {
-  background: #d4845a;
+  background: var(--color-primary);
   color: #fff;
-  border-color: #d4845a;
+  border-color: var(--color-primary);
 }
 
 .scheduleSection,
@@ -131,7 +131,7 @@
 }
 
 .saveButton {
-  background: #d4845a;
+  background: var(--color-primary);
   color: #fff;
   border: none;
 }
