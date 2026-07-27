@@ -1,25 +1,45 @@
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { UserIcon } from '../icons/Icons.jsx'
+import Modal from '../Modal/Modal.jsx'
 import { clearStoredAuth, DEMO_COMPANY_ID } from '../../lib/auth.js'
 import styles from './Nav.module.css'
 
+const IS_ENROLLED = false
+
 const NAV_ITEMS = [
-  { label: '홈', path: '/student/home', match: (p) => p === '/student/home' },
-  { label: '직무체험', path: '/student/explore', match: (p) => p.startsWith('/student/explore') },
+  { key: 'home', label: '홈', path: '/student/home', match: (p) => p === '/student/home' },
   {
+    key: 'explore',
+    label: '직무체험',
+    path: '/student/explore',
+    match: (p) => p.startsWith('/student/explore'),
+  },
+  {
+    key: 'onboarding',
     label: '온보딩',
     path: `/student/onboarding/${DEMO_COMPANY_ID}`,
     match: (p) => p.startsWith('/student/onboarding'),
+    guarded: true,
   },
 ]
 
 export default function Nav() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
+  const [showNotEnrolledModal, setShowNotEnrolledModal] = useState(false)
 
   function handleLogout() {
     clearStoredAuth()
     navigate('/login')
+  }
+
+  function handleNavClick(item) {
+    if (item.guarded && !IS_ENROLLED) {
+      setShowNotEnrolledModal(true)
+      return
+    }
+    navigate(item.path)
   }
 
   return (
@@ -31,10 +51,10 @@ export default function Nav() {
       <nav className={styles.links}>
         {NAV_ITEMS.map((item) => (
           <button
-            key={item.path}
+            key={item.key}
             type="button"
             className={`${styles.link} ${item.match(pathname) ? styles.active : ''}`}
-            onClick={() => navigate(item.path)}
+            onClick={() => handleNavClick(item)}
           >
             {item.label}
           </button>
@@ -46,6 +66,14 @@ export default function Nav() {
           <UserIcon />
         </span>
       </nav>
+
+      {showNotEnrolledModal && (
+        <Modal closeLabel="돌아가기" onClose={() => setShowNotEnrolledModal(false)}>
+          <p>죄송합니다!</p>
+          <p>온보딩 시작은 취업이 확정되어야</p>
+          <p>체험이 가능합니다</p>
+        </Modal>
+      )}
     </header>
   )
 }

@@ -56,10 +56,10 @@ export function validateBusiness(businessNumber) {
   return { valid: true, ...company }
 }
 
-export async function signupStudent({ email, password, name, school, grade }) {
+export async function signupStudent({ email, password, name, school, age }) {
   requireEmailAndPassword(email, password)
-  if (!isNonEmptyString(name) || !isNonEmptyString(school) || !isNonEmptyString(String(grade ?? ''))) {
-    throw new AuthError(400, 'INVALID_INPUT', '이름, 학교, 학년을 모두 입력해주세요.')
+  if (!isNonEmptyString(name) || !isNonEmptyString(school) || !Number.isInteger(age) || age <= 0) {
+    throw new AuthError(400, 'INVALID_INPUT', '이름, 학교, 나이를 모두 입력해주세요.')
   }
 
   await assertEmailNotTaken(email)
@@ -80,7 +80,7 @@ export async function signupStudent({ email, password, name, school, grade }) {
     id: authUser.id,
     name,
     school,
-    grade,
+    age,
   })
   if (studentsError) {
     console.error('students insert 실패:', studentsError)
