@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import * as api from "../../lib/api.js";
+import { getCurrentCompanyId } from "../../lib/auth.js";
 import { JOB_OPTIONS } from "../../mock/company.js";
 import styles from "./CompanyOnboardingSetup.module.css";
 
@@ -7,15 +9,22 @@ export default function CompanyOnboardingSetup() {
   const navigate = useNavigate();
   const [jobTitle, setJobTitle] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleGenerate() {
+  async function handleGenerate() {
     if (!jobTitle) return;
     setIsGenerating(true);
-    // TODO: API 연결 시 POST /api/onboarding/generate 호출 (Claude API)
-    setTimeout(() => {
+    setError("");
+    try {
+      const companyId = getCurrentCompanyId();
+      const { companyName } = await api.getCompanyProfile(companyId);
+      await api.generateOnboarding({ companyId, jobTitle, companyName });
+      navigate(`/company/onboarding-edit/${companyId}`);
+    } catch (err) {
+      setError(err.message ?? "온보딩 생성 중 오류가 발생했습니다.");
+    } finally {
       setIsGenerating(false);
-      navigate("/company/onboarding-edit/new-company");
-    }, 1500);
+    }
   }
 
   return (
@@ -55,6 +64,8 @@ export default function CompanyOnboardingSetup() {
             <li>직무 관련 용어 사전도 함께 생성돼요</li>
           </ul>
         </div>
+
+        {error && <p className={styles.errorText}>{error}</p>}
 
         <button
           type="button"

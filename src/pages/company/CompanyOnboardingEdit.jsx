@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import * as api from "../../lib/api.js";
 import { getOnboardingDetail } from "../../mock/company.js";
+import FallbackBanner from "../../components/FallbackBanner/FallbackBanner.jsx";
 import styles from "./CompanyOnboardingEdit.module.css";
 
 const TABS = [
@@ -16,16 +18,73 @@ const IMPORTANCE_OPTIONS = [
   { value: "high", label: "높음" },
 ];
 
+const EMPTY_SCHEDULES = { day: [], week: [], month: [] };
+
+function toEditableSchedule(rawItems, period) {
+  return (rawItems ?? []).map((item, index) => ({
+    id: `${period}-${index}`,
+    time: item.time ?? "",
+    day: item.time ?? "",
+    activity: item.activity ?? "",
+    importance: item.importance ?? "medium",
+    terms: "",
+  }));
+}
+
+function toApiScheduleItems(items, period) {
+  return items.map((item) => ({
+    time: period === "day" ? (item.time ?? "") : (item.day ?? ""),
+    activity: item.activity ?? "",
+    importance: item.importance ?? "medium",
+  }));
+}
+
 export default function CompanyOnboardingEdit() {
   const navigate = useNavigate();
   const { companyId } = useParams();
-  const detail = getOnboardingDetail(companyId);
+
+  const [detail, setDetail] = useState(null);
+  const [isMock, setIsMock] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [activeTab, setActiveTab] = useState("day");
-  const [schedules, setSchedules] = useState(
-    detail?.schedules ?? { day: [], week: [], month: [] },
-  );
-  const [missions, setMissions] = useState(detail?.missions ?? []);
+  const [schedules, setSchedules] = useState(EMPTY_SCHEDULES);
+  const [missions, setMissions] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const data = await api.getOnboarding(companyId);
+        if (cancelled) return;
+        setDetail({ companyName: data.companyName, jobTitle: data.jobTitle });
+        setSchedules({
+          day: toEditableSchedule(data.schedules?.day, "day"),
+          week: toEditableSchedule(data.schedules?.week, "week"),
+          month: toEditableSchedule(data.schedules?.month, "month"),
+        });
+        setMissions(data.missions ?? []);
+        setIsMock(false);
+      } catch (error) {
+        console.error("온보딩 상세 API 연동 실패, mock으로 폴백합니다:", error);
+        if (cancelled) return;
+        const mockDetail = getOnboardingDetail(companyId);
+        setDetail(mockDetail);
+        setSchedules(mockDetail?.schedules ?? EMPTY_SCHEDULES);
+        setMissions(mockDetail?.missions ?? []);
+        setIsMock(true);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId]);
 
   function updateScheduleField(period, id, field, value) {
     setSchedules((prev) => ({
@@ -79,10 +138,37 @@ export default function CompanyOnboardingEdit() {
     setMissions((prev) => prev.filter((mission) => mission.id !== id));
   }
 
-  function handleSave() {
-    // TODO: API 연결 시 PUT /api/onboarding/:companyId 호출
-    alert("저장되었습니다. (임시)");
-    navigate("/company/onboarding-list");
+  async function handleSave() {
+    if (isMock) {
+      alert("저장되었습니다. (mock)");
+      navigate("/company/onboarding-list");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await api.updateOnboarding(companyId, {
+        schedules: {
+          day: toApiScheduleItems(schedules.day, "day"),
+          week: toApiScheduleItems(schedules.week, "week"),
+          month: toApiScheduleItems(schedules.month, "month"),
+        },
+        missions,
+      });
+      navigate("/company/onboarding-list");
+    } catch (error) {
+      alert(error.message ?? "저장 중 오류가 발생했습니다.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className={styles.page}>
+        <p>불러오는 중...</p>
+      </div>
+    );
   }
 
   if (!detail) {
@@ -115,6 +201,8 @@ export default function CompanyOnboardingEdit() {
         <h1 className={styles.title}>
           {detail.companyName} · {detail.jobTitle} 온보딩 수정
         </h1>
+
+        {isMock && <FallbackBanner />}
 
         <div className={styles.tabRow}>
           {TABS.map((tab) => (
@@ -283,8 +371,9 @@ export default function CompanyOnboardingEdit() {
             type="button"
             className={styles.saveButton}
             onClick={handleSave}
+            disabled={isSaving}
           >
-            저장하기
+            {isSaving ? "저장 중..." : "저장하기"}
           </button>
         </div>
       </div>

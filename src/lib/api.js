@@ -86,6 +86,13 @@ export function generateOnboarding({ companyId, jobTitle, companyName, targetDat
   })
 }
 
+export function updateOnboarding(companyId, { schedules, missions, targetDate }) {
+  return apiFetch(`/api/onboarding/${companyId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ schedules, missions, targetDate }),
+  })
+}
+
 export function enrollStudent(companyId, studentId) {
   return apiFetch(`/api/onboarding/${companyId}/enroll`, {
     method: 'POST',
