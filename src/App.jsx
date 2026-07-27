@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "./pages/Login/LoginPage.jsx";
+import ResetPasswordPage from "./pages/ResetPassword/ResetPasswordPage.jsx";
 import RoleSelectPage from "./pages/Signup/RoleSelectPage.jsx";
 import StudentSignupPage from "./pages/Signup/StudentSignupPage.jsx";
 import CompanySignupPage from "./pages/Signup/CompanySignupPage.jsx";
@@ -24,6 +25,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/signup" element={<RoleSelectPage />} />
       <Route path="/signup/student" element={<StudentSignupPage />} />
       <Route path="/signup/company" element={<CompanySignupPage />} />
