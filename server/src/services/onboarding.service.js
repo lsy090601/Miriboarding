@@ -324,6 +324,25 @@ export async function submitMission(enrollmentId, missionId, content) {
   return { success: true, submission: data }
 }
 
+export async function getStudentEnrollments(studentId) {
+  if (!isNonEmptyString(studentId)) {
+    throw new OnboardingError(400, 'INVALID_INPUT', 'studentId가 필요합니다.')
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('student_enrollment')
+    .select('company_id, enrolled_at')
+    .eq('student_id', studentId)
+    .order('enrolled_at', { ascending: false })
+
+  if (error) {
+    console.error('[onboarding] getStudentEnrollments 실패:', error)
+    throw new OnboardingError(502, 'SUPABASE_ERROR', '등록 정보 조회 중 오류가 발생했습니다.')
+  }
+
+  return (data ?? []).map((row) => ({ companyId: row.company_id, enrolledAt: row.enrolled_at }))
+}
+
 export async function listEnrolledStudents(companyId) {
   if (!isNonEmptyString(companyId)) {
     throw new OnboardingError(400, 'INVALID_INPUT', 'companyId가 필요합니다.')

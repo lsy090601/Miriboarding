@@ -16,6 +16,7 @@ import {
   getStudentDetail,
   registerStudentsByEmail,
   sendMissionFeedback,
+  getStudentEnrollments,
 } from '../services/onboarding.service.js'
 
 function handleError(res, error) {
@@ -164,6 +165,15 @@ export async function registerStudentsHandler(req, res) {
     const { emails } = req.body
     const result = await registerStudentsByEmail(req.params.companyId, emails)
     return res.status(200).json(result)
+  } catch (error) {
+    return handleError(res, error)
+  }
+}
+
+export async function getStudentEnrollmentsHandler(req, res) {
+  try {
+    const enrollments = await getStudentEnrollments(req.params.studentId)
+    return res.status(200).json({ enrollments })
   } catch (error) {
     return handleError(res, error)
   }

@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { UserIcon } from '../icons/Icons.jsx'
 import Modal from '../Modal/Modal.jsx'
 import * as api from '../../lib/api.js'
-import { clearStoredAuth, DEMO_COMPANY_ID, getCurrentStudentId } from '../../lib/auth.js'
+import { clearStoredAuth, getCurrentStudentId } from '../../lib/auth.js'
 import styles from './Nav.module.css'
 
 const NAV_ITEMS = [
@@ -17,7 +17,6 @@ const NAV_ITEMS = [
   {
     key: 'onboarding',
     label: '온보딩',
-    path: `/student/onboarding/${DEMO_COMPANY_ID}`,
     match: (p) => p.startsWith('/student/onboarding'),
     guarded: true,
   },
@@ -27,17 +26,18 @@ export default function Nav() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const [showNotEnrolledModal, setShowNotEnrolledModal] = useState(false)
-  const [isEnrolled, setIsEnrolled] = useState(false)
+  const [enrolledCompanyId, setEnrolledCompanyId] = useState(null)
 
   useEffect(() => {
     let cancelled = false
     api
-      .getEnrollment(DEMO_COMPANY_ID, getCurrentStudentId())
-      .then(() => {
-        if (!cancelled) setIsEnrolled(true)
+      .getStudentEnrollments(getCurrentStudentId())
+      .then(({ enrollments }) => {
+        if (cancelled) return
+        setEnrolledCompanyId(enrollments[0]?.companyId ?? null)
       })
       .catch(() => {
-        if (!cancelled) setIsEnrolled(false)
+        if (!cancelled) setEnrolledCompanyId(null)
       })
     return () => {
       cancelled = true
@@ -50,8 +50,12 @@ export default function Nav() {
   }
 
   function handleNavClick(item) {
-    if (item.guarded && !isEnrolled) {
-      setShowNotEnrolledModal(true)
+    if (item.key === 'onboarding') {
+      if (!enrolledCompanyId) {
+        setShowNotEnrolledModal(true)
+        return
+      }
+      navigate(`/student/onboarding/${enrolledCompanyId}`)
       return
     }
     navigate(item.path)
