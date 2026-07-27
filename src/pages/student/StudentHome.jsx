@@ -3,23 +3,25 @@ import { useNavigate } from 'react-router-dom'
 import Modal from '../../components/Modal/Modal.jsx'
 import Nav from '../../components/Nav/Nav.jsx'
 import * as api from '../../lib/api.js'
-import { DEMO_COMPANY_ID, getCurrentStudentId } from '../../lib/auth.js'
+import { getCurrentStudentId } from '../../lib/auth.js'
 import styles from './StudentHome.module.css'
 
 export default function StudentHome() {
   const navigate = useNavigate()
-  const [isEnrolled, setIsEnrolled] = useState(false)
+  const [enrolledCompanyId, setEnrolledCompanyId] = useState(null)
   const [showNotEnrolledModal, setShowNotEnrolledModal] = useState(false)
+  const isEnrolled = Boolean(enrolledCompanyId)
 
   useEffect(() => {
     let cancelled = false
     api
-      .getEnrollment(DEMO_COMPANY_ID, getCurrentStudentId())
-      .then(() => {
-        if (!cancelled) setIsEnrolled(true)
+      .getStudentEnrollments(getCurrentStudentId())
+      .then(({ enrollments }) => {
+        if (cancelled) return
+        setEnrolledCompanyId(enrollments[0]?.companyId ?? null)
       })
       .catch(() => {
-        if (!cancelled) setIsEnrolled(false)
+        if (!cancelled) setEnrolledCompanyId(null)
       })
     return () => {
       cancelled = true
@@ -27,11 +29,11 @@ export default function StudentHome() {
   }, [])
 
   function handleOnboardingClick() {
-    if (!isEnrolled) {
+    if (!enrolledCompanyId) {
       setShowNotEnrolledModal(true)
       return
     }
-    navigate(`/student/onboarding/${DEMO_COMPANY_ID}`)
+    navigate(`/student/onboarding/${enrolledCompanyId}`)
   }
 
   return (

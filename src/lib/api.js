@@ -100,6 +100,10 @@ export function enrollStudent(companyId, studentId) {
   })
 }
 
+export function getStudentEnrollments(studentId) {
+  return apiFetch(`/api/onboarding/student/${studentId}/enrollments`)
+}
+
 export function getEnrollment(companyId, studentId) {
   return apiFetch(`/api/onboarding/${companyId}/enrollment/${studentId}`)
 }

@@ -16,6 +16,7 @@ import {
   getStudentDetailHandler,
   registerStudentsHandler,
   sendMissionFeedbackHandler,
+  getStudentEnrollmentsHandler,
 } from '../controllers/onboarding.controller.js'
 
 const router = Router()
@@ -36,5 +37,6 @@ router.get('/:companyId/students', listEnrolledStudentsHandler)
 router.get('/:companyId/students/:studentId', getStudentDetailHandler)
 router.post('/:companyId/students/register', registerStudentsHandler)
 router.post('/submissions/:submissionId/feedback', sendMissionFeedbackHandler)
+router.get('/student/:studentId/enrollments', getStudentEnrollmentsHandler)
 
 export default router
