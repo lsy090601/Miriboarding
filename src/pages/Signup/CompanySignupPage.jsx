@@ -142,8 +142,12 @@ export default function CompanySignupPage() {
     } catch (error) {
       if (error.code === 'EMAIL_TAKEN') {
         setErrors({ email: '이미 가입된 이메일입니다.' })
+      } else if (error.code === 'BUSINESS_NUMBER_TAKEN') {
+        setVerification(null)
+        setBizError('이미 가입된 사업자등록번호입니다. 다른 사업자번호로 시도해주세요.')
+        setSearchParams({ step: '1' })
       } else {
-        setErrors({ companyPhone: error.message ?? '회원가입 중 오류가 발생했습니다.' })
+        setErrors({ general: error.message ?? '회원가입 중 오류가 발생했습니다.' })
       }
     } finally {
       setIsSubmitting(false)
@@ -283,6 +287,7 @@ export default function CompanySignupPage() {
           icon={<PhoneIcon />}
         />
         <TermsCheckboxes value={terms} onChange={setTerms} error={errors.terms} />
+        {errors.general && <p className={styles.roleError}>{errors.general}</p>}
         <Button type="submit" variant="primary" className={styles.submit} disabled={isSubmitting}>
           {isSubmitting ? '가입 처리 중...' : '가입 완료하기'}
         </Button>
