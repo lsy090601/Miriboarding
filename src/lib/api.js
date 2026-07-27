@@ -104,6 +104,28 @@ export function listSubmissions(enrollmentId) {
   return apiFetch(`/api/onboarding/enrollments/${enrollmentId}/submissions`)
 }
 
+export function listEnrolledStudents(companyId) {
+  return apiFetch(`/api/onboarding/${companyId}/students`)
+}
+
+export function getStudentDetail(companyId, studentId) {
+  return apiFetch(`/api/onboarding/${companyId}/students/${studentId}`)
+}
+
+export function registerStudentsByEmail(companyId, emails) {
+  return apiFetch(`/api/onboarding/${companyId}/students/register`, {
+    method: 'POST',
+    body: JSON.stringify({ emails }),
+  })
+}
+
+export function sendMissionFeedback(submissionId, feedback) {
+  return apiFetch(`/api/onboarding/submissions/${submissionId}/feedback`, {
+    method: 'POST',
+    body: JSON.stringify({ feedback }),
+  })
+}
+
 export function listJobs() {
   return apiFetch('/api/jobs')
 }

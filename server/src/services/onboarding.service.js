@@ -324,6 +324,229 @@ export async function submitMission(enrollmentId, missionId, content) {
   return { success: true, submission: data }
 }
 
+export async function listEnrolledStudents(companyId) {
+  if (!isNonEmptyString(companyId)) {
+    throw new OnboardingError(400, 'INVALID_INPUT', 'companyId가 필요합니다.')
+  }
+
+  const { data: enrollments, error: enrollmentsError } = await supabaseAdmin
+    .from('student_enrollment')
+    .select('id, student_id, enrolled_at')
+    .eq('company_id', companyId)
+
+  if (enrollmentsError) {
+    console.error('[onboarding] listEnrolledStudents - enrollment 조회 실패:', enrollmentsError)
+    throw new OnboardingError(502, 'SUPABASE_ERROR', '등록 학생 목록 조회 중 오류가 발생했습니다.')
+  }
+  if (!enrollments?.length) return []
+
+  const studentIds = enrollments.map((e) => e.student_id)
+  const enrollmentIds = enrollments.map((e) => e.id)
+
+  const { data: students, error: studentsError } = await supabaseAdmin
+    .from('students')
+    .select('id, name')
+    .in('id', studentIds)
+  if (studentsError) {
+    console.error('[onboarding] listEnrolledStudents - students 조회 실패:', studentsError)
+    throw new OnboardingError(502, 'SUPABASE_ERROR', '학생 정보 조회 중 오류가 발생했습니다.')
+  }
+
+  const { data: users, error: usersError } = await supabaseAdmin.from('users').select('id, email').in('id', studentIds)
+  if (usersError) {
+    console.error('[onboarding] listEnrolledStudents - users 조회 실패:', usersError)
+    throw new OnboardingError(502, 'SUPABASE_ERROR', '사용자 정보 조회 중 오류가 발생했습니다.')
+  }
+
+  const { data: onboardingRow } = await supabaseAdmin
+    .from('company_onboarding')
+    .select('missions')
+    .eq('company_id', companyId)
+    .maybeSingle()
+  const totalMissions = onboardingRow?.missions?.length ?? 0
+
+  const { data: submissions, error: submissionsError } = await supabaseAdmin
+    .from('mission_submission')
+    .select('enrollment_id, mission_id, submitted_at')
+    .in('enrollment_id', enrollmentIds)
+  if (submissionsError) {
+    console.error('[onboarding] listEnrolledStudents - submissions 조회 실패:', submissionsError)
+    throw new OnboardingError(502, 'SUPABASE_ERROR', '제출 내역 조회 중 오류가 발생했습니다.')
+  }
+
+  const studentById = new Map((students ?? []).map((s) => [s.id, s]))
+  const emailById = new Map((users ?? []).map((u) => [u.id, u.email]))
+
+  return enrollments.map((enrollment) => {
+    const subs = (submissions ?? []).filter((s) => s.enrollment_id === enrollment.id)
+    const completedCount = new Set(subs.map((s) => s.mission_id)).size
+    const lastSubmittedAt = subs.reduce(
+      (latest, s) => (!latest || s.submitted_at > latest ? s.submitted_at : latest),
+      null,
+    )
+    const student = studentById.get(enrollment.student_id)
+
+    return {
+      studentId: enrollment.student_id,
+      name: student?.name ?? '알 수 없음',
+      email: emailById.get(enrollment.student_id) ?? '',
+      progress: totalMissions ? Math.round((completedCount / totalMissions) * 100) : 0,
+      completedCount,
+      totalMissions,
+      lastAccess: lastSubmittedAt ?? enrollment.enrolled_at,
+    }
+  })
+}
+
+export async function getStudentDetail(companyId, studentId) {
+  if (!isNonEmptyString(companyId) || !isNonEmptyString(studentId)) {
+    throw new OnboardingError(400, 'INVALID_INPUT', 'companyId, studentId가 필요합니다.')
+  }
+
+  const { data: enrollment, error: enrollmentError } = await supabaseAdmin
+    .from('student_enrollment')
+    .select('id')
+    .eq('company_id', companyId)
+    .eq('student_id', studentId)
+    .maybeSingle()
+
+  if (enrollmentError) {
+    console.error('[onboarding] getStudentDetail - enrollment 조회 실패:', enrollmentError)
+    throw new OnboardingError(502, 'SUPABASE_ERROR', '학생 등록 정보 조회 중 오류가 발생했습니다.')
+  }
+  if (!enrollment) {
+    throw new OnboardingError(404, 'NOT_FOUND', '등록된 학생을 찾을 수 없습니다.')
+  }
+
+  const { data: student, error: studentError } = await supabaseAdmin
+    .from('students')
+    .select('name, school, age')
+    .eq('id', studentId)
+    .maybeSingle()
+  if (studentError) {
+    console.error('[onboarding] getStudentDetail - student 조회 실패:', studentError)
+    throw new OnboardingError(502, 'SUPABASE_ERROR', '학생 정보 조회 중 오류가 발생했습니다.')
+  }
+
+  const { data: userRow } = await supabaseAdmin.from('users').select('email').eq('id', studentId).maybeSingle()
+
+  let missions = []
+  try {
+    const row = await fetchOnboardingRow(companyId)
+    missions = row.missions ?? []
+  } catch (err) {
+    if (!(err instanceof OnboardingError && err.code === 'NOT_FOUND')) throw err
+  }
+
+  const { data: submissions, error: submissionsError } = await supabaseAdmin
+    .from('mission_submission')
+    .select('id, mission_id, content, feedback, submitted_at')
+    .eq('enrollment_id', enrollment.id)
+    .order('submitted_at', { ascending: false })
+  if (submissionsError) {
+    console.error('[onboarding] getStudentDetail - submissions 조회 실패:', submissionsError)
+    throw new OnboardingError(502, 'SUPABASE_ERROR', '제출 내역 조회 중 오류가 발생했습니다.')
+  }
+
+  const submissionByMissionId = new Map()
+  for (const submission of submissions ?? []) {
+    if (!submissionByMissionId.has(submission.mission_id)) submissionByMissionId.set(submission.mission_id, submission)
+  }
+
+  const completedMissions = []
+  const incompletedMissions = []
+  for (const mission of missions) {
+    const submission = submissionByMissionId.get(mission.id)
+    if (submission) {
+      completedMissions.push({
+        id: mission.id,
+        title: mission.title,
+        submissionId: submission.id,
+        content: submission.content,
+        feedback: submission.feedback,
+        submittedAt: submission.submitted_at,
+      })
+    } else {
+      incompletedMissions.push({ id: mission.id, title: mission.title })
+    }
+  }
+
+  return {
+    name: student?.name ?? '알 수 없음',
+    school: student?.school ?? '',
+    age: student?.age ?? null,
+    email: userRow?.email ?? '',
+    progress: missions.length ? Math.round((completedMissions.length / missions.length) * 100) : 0,
+    completedMissions,
+    incompletedMissions,
+  }
+}
+
+export async function registerStudentsByEmail(companyId, emails) {
+  if (!isNonEmptyString(companyId) || !Array.isArray(emails) || emails.length === 0) {
+    throw new OnboardingError(400, 'INVALID_INPUT', 'companyId와 이메일 목록이 필요합니다.')
+  }
+
+  const results = { success: 0, failed: 0, failedEmails: [] }
+
+  for (const rawEmail of emails) {
+    const email = String(rawEmail).trim()
+    if (!email) continue
+
+    const { data: userRow, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('id, user_type')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (userError) {
+      console.error('[onboarding] registerStudentsByEmail - user 조회 실패:', userError)
+      results.failed += 1
+      results.failedEmails.push(email)
+      continue
+    }
+    if (!userRow || userRow.user_type !== 'student') {
+      results.failed += 1
+      results.failedEmails.push(email)
+      continue
+    }
+
+    try {
+      await enrollStudent(companyId, userRow.id)
+      results.success += 1
+    } catch (err) {
+      console.error('[onboarding] registerStudentsByEmail - enroll 실패:', err)
+      results.failed += 1
+      results.failedEmails.push(email)
+    }
+  }
+
+  return results
+}
+
+export async function sendMissionFeedback(submissionId, feedback) {
+  if (!isNonEmptyString(submissionId) || !isNonEmptyString(feedback)) {
+    throw new OnboardingError(400, 'INVALID_INPUT', 'submissionId와 feedback이 필요합니다.')
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('mission_submission')
+    .update({ feedback })
+    .eq('id', submissionId)
+    .select()
+    .maybeSingle()
+
+  if (error) {
+    console.error('[onboarding] sendMissionFeedback 실패:', error)
+    throw new OnboardingError(502, 'SUPABASE_ERROR', '피드백 저장 중 오류가 발생했습니다.')
+  }
+  if (!data) {
+    throw new OnboardingError(404, 'NOT_FOUND', '제출 내역을 찾을 수 없습니다.')
+  }
+
+  return { success: true, feedback: data.feedback }
+}
+
 export async function listSubmissions(enrollmentId) {
   if (!isNonEmptyString(enrollmentId)) {
     throw new OnboardingError(400, 'INVALID_INPUT', 'enrollmentId가 필요합니다.')
