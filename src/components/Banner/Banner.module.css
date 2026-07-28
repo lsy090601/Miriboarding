@@ -1,0 +1,56 @@
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: var(--radius-field);
+}
+
+.iconDot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.text {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.success {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.success .iconDot {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.success .icon {
+  width: 13px;
+  height: 13px;
+  color: var(--color-white);
+}
+
+.warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.info {
+  background: var(--color-surface-strong);
+  color: var(--color-text);
+}

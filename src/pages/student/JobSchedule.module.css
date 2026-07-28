@@ -1,125 +1,45 @@
 .page {
-  min-height: calc(100vh - 72px);
-  background: var(--color-primary);
-  padding: 32px;
+  min-height: 100vh;
+  background: var(--color-bg-app);
 }
 
 .container {
-  max-width: 1200px;
-  min-height: calc(100vh - 72px - 64px);
+  max-width: 800px;
   margin: 0 auto;
-  background: var(--color-white);
-  border-radius: 32px;
-  padding: 48px;
-}
-
-.backButton {
-  border: none;
-  background: none;
-  color: var(--color-primary);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0;
-  margin-bottom: 24px;
+  padding: 40px 80px 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
 }
 
 .header {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 6px;
+  margin-top: 4px;
 }
 
 .icon {
-  font-size: 24px;
+  font-size: 26px;
 }
 
 .title {
-  margin: 0 0 6px;
+  margin: 0;
   font-size: 24px;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--color-text);
 }
 
 .subtitle {
-  margin: 0 0 24px;
+  margin: -8px 0 4px;
   font-size: 14px;
-  color: #8a8fa3;
-}
-
-.tabs {
-  display: flex;
-  gap: 28px;
-  border-top: 1px solid #e2e5f0;
-  padding-top: 16px;
-  margin-bottom: 24px;
-}
-
-.tab {
-  border: none;
-  background: none;
-  padding: 0 0 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #9aa0b8;
-  cursor: pointer;
-}
-
-.tabActive {
-  color: var(--color-primary);
-  font-weight: 700;
-  border-bottom: 2px solid var(--color-primary);
+  color: var(--color-text-muted);
 }
 
 .scheduleList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.scheduleItem {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  background: #f7f8fc;
-  border: none;
-  border-radius: 14px;
-  padding: 18px 20px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.scheduleTitle {
-  font-size: 15px;
-  font-weight: 600;
-  color: #333;
-}
-
-.importance {
-  flex-shrink: 0;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: var(--radius-pill);
-}
-
-.importance-low {
-  background: #e6f4ea;
-  color: #2e7d32;
-}
-
-.importance-medium {
-  background: #fff4e0;
-  color: #b9770e;
-}
-
-.importance-high {
-  background: #fdecea;
-  color: #c62828;
 }

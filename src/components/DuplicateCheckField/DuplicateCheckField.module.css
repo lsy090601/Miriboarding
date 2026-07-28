@@ -2,10 +2,18 @@
   width: 100%;
 }
 
+.label {
+  display: block;
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
 .row {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
 }
 
 .row > *:first-child {
@@ -15,21 +23,21 @@
 
 .checkButton {
   width: auto;
-  height: 56px;
-  padding: 0 16px;
+  height: var(--field-height);
+  padding: 0 20px;
   font-size: 14px;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .successText {
-  margin: 6px 0 0 22px;
+  margin: 6px 0 0 2px;
   font-size: 13px;
-  color: #2e9e5b;
+  color: var(--color-success);
 }
 
 .takenText {
-  margin: 6px 0 0 22px;
+  margin: 6px 0 0 2px;
   font-size: 13px;
   color: var(--color-error);
 }

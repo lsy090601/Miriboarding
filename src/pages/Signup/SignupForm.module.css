@@ -1,3 +1,22 @@
+.stepperRow {
+  margin-bottom: 24px;
+}
+
+.title {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.subtitle {
+  margin: 10px 0 32px;
+  font-size: 17px;
+  font-weight: 300;
+  line-height: 27px;
+  color: var(--color-text-muted);
+}
+
 .form {
   display: flex;
   flex-direction: column;
@@ -17,59 +36,98 @@
 }
 
 .successText {
-  color: var(--color-primary);
-  font-size: 22px;
-  font-weight: 600;
+  color: var(--color-text);
+  font-size: 24px;
+  font-weight: 700;
   text-align: center;
-  margin: -8px 0 4px;
+  margin: 0 0 4px;
 }
 
-.backLink {
+.backButton {
   align-self: flex-start;
   background: none;
   border: none;
   padding: 0;
-  color: var(--color-primary);
+  color: var(--color-text-muted);
   font-size: 14px;
+  font-weight: 500;
   text-decoration: underline;
   cursor: pointer;
 }
 
-.link {
+.centerLink {
   align-self: center;
   margin-top: 4px;
-  color: var(--color-primary);
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-text-muted);
   font-size: 15px;
   font-weight: 500;
-  text-decoration: underline;
+  cursor: pointer;
 }
 
 .sectionGroup {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 100%;
 }
 
-.row {
+.fieldLabel {
+  display: block;
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.bizRow {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
+  width: 100%;
 }
 
-.row > *:first-child {
+.bizRow > *:first-child {
   flex: 1;
   min-width: 0;
 }
 
-.checkButton {
+.verifyButton {
   width: auto;
-  height: 56px;
-  padding: 0 16px;
-  font-size: 14px;
+  height: var(--field-height);
+  padding: 0 28px;
+  font-size: 16px;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-.badgeRow {
-  margin: 10px 0 0 22px;
+.hint {
+  width: 100%;
+  background: var(--color-surface);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.footer {
+  margin: 22px 0 0;
+  width: 100%;
+  text-align: center;
+  font-size: 16px;
+  color: var(--color-text-muted);
+}
+
+.footer a,
+.footerLink {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  cursor: pointer;
 }

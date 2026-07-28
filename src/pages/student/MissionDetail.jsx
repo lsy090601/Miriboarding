@@ -3,8 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom'
 import * as api from '../../lib/api.js'
 import { getCurrentStudentId } from '../../lib/auth.js'
 import { getOnboardingByCompanyId } from '../../mock/onboarding.js'
-import FallbackBanner from '../../components/FallbackBanner/FallbackBanner.jsx'
+import Banner from '../../components/Banner/Banner.jsx'
 import Nav from '../../components/Nav/Nav.jsx'
+import Button from '../../components/Button/Button.jsx'
+import Input from '../../components/Input/Input.jsx'
+import Radio from '../../components/Radio/Radio.jsx'
+import Dropzone from '../../components/Dropzone/Dropzone.jsx'
 import styles from './MissionDetail.module.css'
 
 export default function MissionDetail() {
@@ -18,7 +22,6 @@ export default function MissionDetail() {
 
   const [submissionForm, setSubmissionForm] = useState({ content: '', memo: '' })
   const [fileName, setFileName] = useState('')
-  const [isDraggingOver, setIsDraggingOver] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitFallback, setSubmitFallback] = useState(false)
@@ -76,9 +79,9 @@ export default function MissionDetail() {
         <Nav />
         <div className={styles.page}>
           <div className={styles.container}>
-            <button type="button" className={styles.backButton} onClick={() => navigate('/student/home')}>
+            <Button variant="outline" size="sm" onClick={() => navigate('/student/home')}>
               ← 뒤로가기
-            </button>
+            </Button>
             <p>존재하지 않는 미션이에요.</p>
           </div>
         </div>
@@ -86,16 +89,8 @@ export default function MissionDetail() {
     )
   }
 
-  function handleFileDrop(e) {
-    e.preventDefault()
-    setIsDraggingOver(false)
-    const file = e.dataTransfer.files?.[0]
-    if (file) setFileName(file.name)
-  }
-
-  function handleFileSelect(e) {
-    const file = e.target.files?.[0]
-    if (file) setFileName(file.name)
+  function handleFileChange(file) {
+    setFileName(file.name)
   }
 
   function validateSubmission() {
@@ -143,88 +138,72 @@ export default function MissionDetail() {
     <>
       <Nav />
       <div className={styles.page}>
-      <div className={styles.container}>
-        <button
-          type="button"
-          className={styles.backButton}
-          onClick={() => navigate(`/student/onboarding/${companyId}/missions`)}
-        >
-          ← 뒤로가기
-        </button>
+        <div className={styles.container}>
+          <Button variant="outline" size="sm" onClick={() => navigate(`/student/onboarding/${companyId}/missions`)}>
+            ← 뒤로가기
+          </Button>
 
-        {isMock && <FallbackBanner />}
+          {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
 
-        <h1 className={styles.title}>{mission.title}</h1>
-        <p className={styles.description}>{mission.description}</p>
+          <h1 className={styles.title}>{mission.title}</h1>
+          <p className={styles.description}>{mission.description}</p>
 
-        <form className={styles.form} onSubmit={handleSubmit}>
-          {mission.submissionType === 'text' && (
-            <textarea
-              className={styles.textarea}
-              placeholder="내용을 작성해주세요"
-              value={submissionForm.content}
-              onChange={(e) => setSubmissionForm((prev) => ({ ...prev, content: e.target.value }))}
-              rows={6}
-            />
-          )}
+          <form className={styles.form} onSubmit={handleSubmit}>
+            {mission.submissionType === 'text' && (
+              <Input
+                multiline
+                rows={6}
+                label="제출 내용"
+                placeholder="내용을 작성해주세요"
+                value={submissionForm.content}
+                onChange={(e) => setSubmissionForm((prev) => ({ ...prev, content: e.target.value }))}
+              />
+            )}
 
-          {mission.submissionType === 'choice' && (
-            <div className={styles.choiceList}>
-              {(mission.options ?? []).map((option) => (
-                <label key={option} className={styles.choiceOption}>
-                  <input
-                    type="radio"
+            {mission.submissionType === 'choice' && (
+              <div className={styles.choiceList}>
+                {(mission.options ?? []).map((option) => (
+                  <Radio
+                    key={option}
+                    id={`choice-${option}`}
                     name="mission-choice"
                     value={option}
                     checked={submissionForm.content === option}
                     onChange={(e) => setSubmissionForm((prev) => ({ ...prev, content: e.target.value }))}
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
-          )}
+                  >
+                    {option}
+                  </Radio>
+                ))}
+              </div>
+            )}
 
-          {mission.submissionType === 'file' && (
-            <label
-              className={`${styles.dropzone} ${isDraggingOver ? styles.dropzoneActive : ''}`}
-              onDragOver={(e) => {
-                e.preventDefault()
-                setIsDraggingOver(true)
-              }}
-              onDragLeave={() => setIsDraggingOver(false)}
-              onDrop={handleFileDrop}
-            >
-              <input type="file" className={styles.fileInput} onChange={handleFileSelect} />
-              <span className={styles.dropzoneIcon}>📎</span>
-              <span>{fileName || '파일을 드래그하거나 클릭해서 선택하세요'}</span>
-            </label>
-          )}
+            {mission.submissionType === 'file' && <Dropzone fileName={fileName} onChange={handleFileChange} />}
 
-          <textarea
-            className={styles.memoTextarea}
-            placeholder="메모 (선택)"
-            value={submissionForm.memo}
-            onChange={(e) => setSubmissionForm((prev) => ({ ...prev, memo: e.target.value }))}
-            rows={3}
-          />
+            <Input
+              multiline
+              rows={3}
+              label="메모 (선택)"
+              placeholder="메모를 남겨보세요"
+              value={submissionForm.memo}
+              onChange={(e) => setSubmissionForm((prev) => ({ ...prev, memo: e.target.value }))}
+            />
 
-          {validationError && <p className={styles.validationError}>{validationError}</p>}
+            {validationError && <p className={styles.validationError}>{validationError}</p>}
 
-          <button type="submit" className={styles.submitButton} disabled={isSubmitting || submitted}>
-            {submitted ? '제출 완료' : isSubmitting ? '제출 중...' : '제출하기'}
-          </button>
+            <Button type="submit" variant="primary" disabled={isSubmitting || submitted}>
+              {submitted ? '제출 완료' : isSubmitting ? '제출 중...' : '제출하기'}
+            </Button>
 
-          <p className={styles.notice}>제출 후 회사가 검토합니다</p>
+            <p className={styles.notice}>제출 후 회사가 검토합니다</p>
 
-          {submitted && submitFallback && (
-            <p className={styles.fallbackNotice}>⚠️ 서버 저장에 실패해서 화면에서만 표시 중이에요.</p>
-          )}
-          {submitted && !submitFallback && (
-            <p className={styles.submittedMessage}>제출이 완료됐어요. 검토 결과를 기다려주세요.</p>
-          )}
-        </form>
-      </div>
+            {submitted && submitFallback && (
+              <Banner variant="warning">서버 저장에 실패해서 화면에서만 표시 중이에요.</Banner>
+            )}
+            {submitted && !submitFallback && (
+              <Banner variant="success">제출이 완료됐어요. 검토 결과를 기다려주세요.</Banner>
+            )}
+          </form>
+        </div>
       </div>
     </>
   )

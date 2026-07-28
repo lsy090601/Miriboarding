@@ -1,0 +1,15 @@
+.chip {
+  border: none;
+  background: var(--color-surface-strong);
+  color: var(--color-primary);
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.chip:hover {
+  background: var(--color-border);
+}

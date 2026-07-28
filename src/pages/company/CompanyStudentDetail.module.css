@@ -1,147 +1,114 @@
 .page {
   min-height: 100vh;
-  padding: 32px 20px;
-  background: #f8f9fb;
+  background: var(--color-bg-app);
 }
 
 .container {
-  max-width: 600px;
+  max-width: 720px;
   margin: 0 auto;
-}
-
-.backButton {
-  background: none;
-  border: none;
-  font-size: 14px;
-  color: #666;
-  cursor: pointer;
-  padding: 0;
-  margin-bottom: 16px;
+  padding: 40px 80px 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
 }
 
 .profileCard {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  margin-bottom: 20px;
+  width: 100%;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .name {
-  font-size: 20px;
+  margin: 0;
+  font-size: 22px;
   font-weight: 700;
+  color: var(--color-text);
 }
 
 .email {
-  font-size: 13px;
-  color: #888;
-  margin-bottom: 12px;
-}
-
-.progressBarWrap {
-  width: 100%;
-  height: 8px;
-  background: #eee;
-  border-radius: 4px;
-  margin-bottom: 6px;
-}
-
-.progressBar {
-  height: 100%;
-  background: var(--color-primary);
-  border-radius: 4px;
-}
-
-.progressText {
-  font-size: 13px;
-  color: #666;
+  margin: -10px 0 0;
+  font-size: 14px;
+  color: var(--color-text-muted);
 }
 
 .targetDateRow {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #eee;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
 }
 
-.targetDateLabel {
-  font-size: 13px;
-  font-weight: 600;
-  color: #666;
-}
-
-.targetDateInput {
+.targetDateRow > :first-child {
   flex: 1;
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 13px;
 }
 
-.targetDateSaveButton {
-  background: var(--color-primary);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.targetDateSaveButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.saveButton {
+  flex-shrink: 0;
 }
 
 .missionSection {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  margin-bottom: 16px;
+  width: 100%;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .sectionTitle {
-  font-size: 15px;
+  margin: 0;
+  font-size: 16px;
   font-weight: 700;
-  margin-bottom: 10px;
+  color: var(--color-text);
 }
 
 .missionList {
   list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .missionItem,
 .missionItemDone {
+  margin: 0;
   font-size: 14px;
+  color: var(--color-text);
 }
 
 .emptyText {
-  font-size: 13px;
-  color: #aaa;
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-muted);
 }
 
 .missionCard {
-  border: 1px solid #eee;
-  border-radius: 10px;
-  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-field);
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .missionContent {
   font-size: 13px;
-  color: #666;
-  background: #f8f9fb;
-  border-radius: 8px;
-  padding: 8px 10px;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border-radius: 10px;
+  padding: 10px 12px;
   margin: 0;
 }
 
@@ -154,26 +121,9 @@
 .feedbackRow {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.feedbackInput {
-  width: 100%;
-  min-height: 60px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
-  resize: vertical;
+  gap: 10px;
 }
 
 .sendButton {
-  background: var(--color-primary);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
+  align-self: flex-end;
 }

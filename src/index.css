@@ -1,11 +1,41 @@
+@font-face {
+  font-family: 'Jalnan2';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2107@1.1/Jalnan2.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --color-primary: #1a2a80;
   --color-primary-glow: #4192ff;
   --color-error: #d64545;
   --color-white: #ffffff;
+
+  /* 리디자인 토큰 (Figma "(리디자인)" 프레임 기준) */
+  --color-surface: #f4f6fd;
+  --color-surface-strong: #e5e9f8;
+  --color-border: #d3d9f0;
+  --color-text: #16192e;
+  --color-text-muted: #6b7391;
+  --color-success: #2e9e5b;
+  --color-warning-bg: #fff4e0;
+  --color-warning-text: #8a5a00;
+
+  /* 앱 내부(대시보드 등) 화면 배경 */
+  --color-bg-app: #f9fafd;
+
+  --radius-field: 14px;
+  --radius-card: 20px;
+  --radius-card-lg: 40px;
   --radius-pill: 999px;
+
+  --field-height: 58px;
+  --button-height: 60px;
+  --nav-height: 88px;
+
   --font-body: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
-  --font-logo: 'Black Han Sans', var(--font-body);
+  --font-logo: 'Jalnan2', var(--font-body);
 }
 
 * {

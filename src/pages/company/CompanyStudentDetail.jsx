@@ -3,7 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import * as api from "../../lib/api.js";
 import { getCurrentCompanyId } from "../../lib/auth.js";
 import { getStudentById } from "../../mock/company.js";
-import FallbackBanner from "../../components/FallbackBanner/FallbackBanner.jsx";
+import Banner from "../../components/Banner/Banner.jsx";
+import Button from "../../components/Button/Button.jsx";
+import Input from "../../components/Input/Input.jsx";
+import ProgressBar from "../../components/ProgressBar/ProgressBar.jsx";
 import styles from "./CompanyStudentDetail.module.css";
 
 export default function CompanyStudentDetail() {
@@ -102,13 +105,9 @@ export default function CompanyStudentDetail() {
     return (
       <div className={styles.page}>
         <div className={styles.container}>
-          <button
-            type="button"
-            className={styles.backButton}
-            onClick={() => navigate("/company/students")}
-          >
+          <Button variant="outline" size="sm" onClick={() => navigate("/company/students")}>
             ← 뒤로가기
-          </button>
+          </Button>
           <p>학생 정보를 찾을 수 없어요.</p>
         </div>
       </div>
@@ -118,48 +117,28 @@ export default function CompanyStudentDetail() {
   return (
     <div className={styles.page}>
       <div className={styles.container}>
-        <button
-          type="button"
-          className={styles.backButton}
-          onClick={() => navigate("/company/students")}
-        >
+        <Button variant="outline" size="sm" onClick={() => navigate("/company/students")}>
           ← 뒤로가기
-        </button>
+        </Button>
 
-        {isMock && <FallbackBanner />}
+        {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
 
         <div className={styles.profileCard}>
           <h1 className={styles.name}>{student.name}</h1>
           <p className={styles.email}>{student.email}</p>
-          <div className={styles.progressBarWrap}>
-            <div
-              className={styles.progressBar}
-              style={{ width: `${student.progress}%` }}
-            />
-          </div>
-          <span className={styles.progressText}>
-            온보딩 진도 {student.progress}%
-          </span>
+          <ProgressBar value={student.progress} valueLabel={`온보딩 진도 ${student.progress}%`} />
 
           <div className={styles.targetDateRow}>
-            <label className={styles.targetDateLabel} htmlFor="targetDate">
-              실습 시작일
-            </label>
-            <input
+            <Input
+              label="실습 시작일"
               id="targetDate"
               type="date"
-              className={styles.targetDateInput}
               value={targetDateDraft}
               onChange={(e) => setTargetDateDraft(e.target.value)}
             />
-            <button
-              type="button"
-              className={styles.targetDateSaveButton}
-              disabled={isSavingTargetDate}
-              onClick={handleSaveTargetDate}
-            >
+            <Button size="sm" disabled={isSavingTargetDate} onClick={handleSaveTargetDate} className={styles.saveButton}>
               {isSavingTargetDate ? "저장 중..." : "저장"}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -172,17 +151,17 @@ export default function CompanyStudentDetail() {
               {student.completedMissions.map((mission) => (
                 <li key={mission.id} className={styles.missionCard}>
                   <p className={styles.missionItemDone}>✅ {mission.title}</p>
-                  {mission.content && (
-                    <p className={styles.missionContent}>{mission.content}</p>
-                  )}
+                  {mission.content && <p className={styles.missionContent}>{mission.content}</p>}
 
-                  {!isMock && mission.submissionId && (
-                    mission.feedback ? (
+                  {!isMock &&
+                    mission.submissionId &&
+                    (mission.feedback ? (
                       <p className={styles.existingFeedback}>💬 {mission.feedback}</p>
                     ) : (
                       <div className={styles.feedbackRow}>
-                        <textarea
-                          className={styles.feedbackInput}
+                        <Input
+                          multiline
+                          rows={2}
                           placeholder="이 미션에 대한 피드백을 입력하세요"
                           value={feedbackDrafts[mission.submissionId] ?? ""}
                           onChange={(e) =>
@@ -192,17 +171,16 @@ export default function CompanyStudentDetail() {
                             }))
                           }
                         />
-                        <button
-                          type="button"
+                        <Button
+                          size="sm"
                           className={styles.sendButton}
                           disabled={sendingId === mission.submissionId}
                           onClick={() => handleSendFeedback(mission.submissionId)}
                         >
                           {sendingId === mission.submissionId ? "전송 중..." : "피드백 전송"}
-                        </button>
+                        </Button>
                       </div>
-                    )
-                  )}
+                    ))}
                 </li>
               ))}
             </ul>

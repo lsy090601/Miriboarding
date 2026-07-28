@@ -1,3 +1,78 @@
+/* ---- 브랜드 패널 (좌측) ---- */
+.brandLogo {
+  font-family: var(--font-logo);
+  font-size: 40px;
+  margin: 0 0 36px;
+}
+
+.brandHeadline {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.brandHeadline p {
+  margin: 0;
+}
+
+.brandSubcopy {
+  margin: 18px 0 0;
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.brandSpacer {
+  flex: 1;
+  min-height: 32px;
+}
+
+.featureList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.featureDot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ---- 폼 패널 (우측) ---- */
+.title {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.subtitle {
+  margin: 10px 0 36px;
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--color-text-muted);
+}
+
 .form {
   display: flex;
   flex-direction: column;
@@ -5,27 +80,20 @@
   width: 100%;
 }
 
-.submit {
-  margin-top: 20px;
-}
-
-.link {
-  align-self: center;
-  margin-top: 4px;
-  color: var(--color-primary);
-  font-size: 15px;
-  font-weight: 500;
-  text-decoration: underline;
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -6px;
 }
 
 .forgotLink {
-  align-self: center;
   background: none;
   border: none;
   padding: 0;
-  color: rgba(26, 42, 128, 0.6);
-  font-size: 13px;
-  text-decoration: underline;
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
 }
 
@@ -46,13 +114,26 @@
   gap: 12px;
 }
 
-.forgotSubmit {
-  width: 100%;
-}
-
 .forgotSent {
   margin: 0;
   font-size: 13px;
-  color: var(--color-primary);
+  color: var(--color-text-muted);
   text-align: center;
+}
+
+.submit {
+  margin-top: 8px;
+}
+
+.footer {
+  margin: 0;
+  text-align: center;
+  font-size: 15px;
+  color: var(--color-text-muted);
+}
+
+.footer a {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
 }
