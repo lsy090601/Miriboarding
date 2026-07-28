@@ -25,7 +25,9 @@ export default function OnboardingHome() {
         const data = await api.getOnboarding(companyId)
         const { submissions } = await api.listSubmissions(enrollment.enrollmentId)
         if (cancelled) return
-        setOnboarding(api.normalizeOnboardingResponse(companyId, data, submissions))
+        const normalized = api.normalizeOnboardingResponse(companyId, data, submissions)
+        normalized.targetDate = enrollment.targetDate
+        setOnboarding(normalized)
         setIsMock(false)
       } catch (error) {
         console.error('온보딩 API 연동 실패, mock으로 폴백합니다:', error)

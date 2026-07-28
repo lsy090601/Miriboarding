@@ -134,6 +134,19 @@ export function registerStudentsByEmail(companyId, emails) {
   })
 }
 
+export function removeStudent(companyId, studentId) {
+  return apiFetch(`/api/onboarding/${companyId}/students/${studentId}`, {
+    method: 'DELETE',
+  })
+}
+
+export function updateStudentTargetDate(companyId, studentId, targetDate) {
+  return apiFetch(`/api/onboarding/${companyId}/students/${studentId}/target-date`, {
+    method: 'PUT',
+    body: JSON.stringify({ targetDate }),
+  })
+}
+
 export function sendMissionFeedback(submissionId, feedback) {
   return apiFetch(`/api/onboarding/submissions/${submissionId}/feedback`, {
     method: 'POST',

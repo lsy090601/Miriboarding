@@ -57,6 +57,45 @@
   color: #666;
 }
 
+.targetDateRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+
+.targetDateLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+}
+
+.targetDateInput {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.targetDateSaveButton {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.targetDateSaveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .missionSection {
   background: #fff;
   border-radius: 12px;
