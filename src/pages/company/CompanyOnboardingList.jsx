@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as api from "../../lib/api.js";
 import { getCurrentCompanyId } from "../../lib/auth.js";
+import Button from "../../components/Button/Button.jsx";
+import ActionCard from "../../components/ActionCard/ActionCard.jsx";
+import Badge from "../../components/Badge/Badge.jsx";
 import styles from "./CompanyOnboardingList.module.css";
 
 export default function CompanyOnboardingList() {
@@ -40,23 +43,15 @@ export default function CompanyOnboardingList() {
     <div className={styles.page}>
       <div className={styles.container}>
         <div className={styles.header}>
-          <button
-            type="button"
-            className={styles.backButton}
-            onClick={() => navigate("/company/home")}
-          >
+          <Button variant="outline" size="sm" onClick={() => navigate("/company/home")}>
             ← 뒤로가기
-          </button>
+          </Button>
           <h1 className={styles.title}>온보딩 목록</h1>
         </div>
 
-        <button
-          type="button"
-          className={styles.createButton}
-          onClick={() => navigate("/company/onboarding-setup")}
-        >
+        <Button variant="primary" onClick={() => navigate("/company/onboarding-setup")}>
           + 새 온보딩 생성
-        </button>
+        </Button>
 
         <div className={styles.cardList}>
           {isLoading ? (
@@ -64,17 +59,12 @@ export default function CompanyOnboardingList() {
           ) : !onboarding ? (
             <p className={styles.emptyText}>아직 생성된 온보딩이 없어요.</p>
           ) : (
-            <button
-              type="button"
-              className={styles.card}
+            <ActionCard
+              title={onboarding.jobTitle}
+              badge={<Badge tone="success">진행 중</Badge>}
+              meta={`등록 학생 ${onboarding.enrolledCount}명`}
               onClick={() => navigate(`/company/onboarding-edit/${companyId}`)}
-            >
-              <span className={styles.jobTitle}>{onboarding.jobTitle}</span>
-              <span className={styles.status}>진행 중</span>
-              <span className={styles.enrolled}>
-                등록 학생 {onboarding.enrolledCount}명
-              </span>
-            </button>
+            />
           )}
         </div>
       </div>

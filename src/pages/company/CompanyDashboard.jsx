@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import * as api from "../../lib/api.js";
 import { getCurrentCompanyId } from "../../lib/auth.js";
 import { dashboardMock } from "../../mock/company.js";
-import FallbackBanner from "../../components/FallbackBanner/FallbackBanner.jsx";
+import Banner from "../../components/Banner/Banner.jsx";
+import StatCard from "../../components/StatCard/StatCard.jsx";
+import ActionCard from "../../components/ActionCard/ActionCard.jsx";
 import styles from "./CompanyDashboard.module.css";
 
 const QUICK_ACTIONS = [
@@ -81,34 +83,23 @@ export default function CompanyDashboard() {
       <div className={styles.container}>
         <h1 className={styles.title}>{companyName} 관리자 대시보드</h1>
 
-        {isMock && <FallbackBanner />}
+        {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
 
         <div className={styles.statList}>
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>등록된 학생 수</span>
-            <span className={styles.statValue}>{registeredStudents}명</span>
-          </div>
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>미션 완료율 (평균)</span>
-            <span className={styles.statValue}>{missionCompletionRate}%</span>
-          </div>
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>활성 온보딩 수</span>
-            <span className={styles.statValue}>{activeOnboardings}건</span>
-          </div>
+          <StatCard label="등록된 학생 수" value={`${registeredStudents}명`} />
+          <StatCard label="미션 완료율 (평균)" value={`${missionCompletionRate}%`} />
+          <StatCard label="활성 온보딩 수" value={`${activeOnboardings}건`} />
         </div>
 
         <div className={styles.actionGrid}>
           {QUICK_ACTIONS.map((action) => (
-            <button
+            <ActionCard
               key={action.path}
-              type="button"
-              className={styles.actionCard}
+              compact
+              icon={action.icon}
+              title={action.label}
               onClick={() => navigate(action.path)}
-            >
-              <span className={styles.actionIcon}>{action.icon}</span>
-              <span className={styles.actionLabel}>{action.label}</span>
-            </button>
+            />
           ))}
         </div>
       </div>

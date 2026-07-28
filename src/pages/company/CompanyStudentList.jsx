@@ -4,7 +4,9 @@ import * as api from "../../lib/api.js";
 import { getCurrentCompanyId } from "../../lib/auth.js";
 import { studentListMock } from "../../mock/company.js";
 import { formatDate } from "../../mock/onboarding.js";
-import FallbackBanner from "../../components/FallbackBanner/FallbackBanner.jsx";
+import Banner from "../../components/Banner/Banner.jsx";
+import Button from "../../components/Button/Button.jsx";
+import ProgressBar from "../../components/ProgressBar/ProgressBar.jsx";
 import styles from "./CompanyStudentList.module.css";
 
 export default function CompanyStudentList() {
@@ -76,68 +78,58 @@ export default function CompanyStudentList() {
     <div className={styles.page}>
       <div className={styles.container}>
         <div className={styles.header}>
-          <button
-            type="button"
-            className={styles.backButton}
-            onClick={() => navigate("/company/home")}
-          >
+          <Button variant="outline" size="sm" onClick={() => navigate("/company/home")}>
             ← 뒤로가기
-          </button>
+          </Button>
           <h1 className={styles.title}>학생 현황</h1>
         </div>
 
-        {isMock && <FallbackBanner />}
+        {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
 
         {isLoading ? (
           <p>불러오는 중...</p>
         ) : students.length === 0 ? (
           <p>아직 등록된 학생이 없어요.</p>
         ) : (
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>이름</th>
-                <th>온보딩 진도</th>
-                <th>미션 완료</th>
-                <th>최근 접속일</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {students.map((student) => (
-                <tr
-                  key={student.id}
-                  className={styles.row}
-                  onClick={() => navigate(`/company/students/${student.id}`)}
-                >
-                  <td>{student.name}</td>
-                  <td>
-                    <div className={styles.progressBarWrap}>
-                      <div
-                        className={styles.progressBar}
-                        style={{ width: `${student.progress}%` }}
-                      />
-                    </div>
-                    <span className={styles.progressText}>
-                      {student.progress}%
-                    </span>
-                  </td>
-                  <td>{student.missions}</td>
-                  <td>{student.lastAccess}</td>
-                  <td>
-                    <button
-                      type="button"
-                      className={styles.deleteButton}
-                      disabled={deletingId === student.id}
-                      onClick={(e) => handleDelete(e, student.id, student.name)}
-                    >
-                      {deletingId === student.id ? "삭제 중..." : "삭제"}
-                    </button>
-                  </td>
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>이름</th>
+                  <th>온보딩 진도</th>
+                  <th>미션 완료</th>
+                  <th>최근 접속일</th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {students.map((student) => (
+                  <tr key={student.id} className={styles.row} onClick={() => navigate(`/company/students/${student.id}`)}>
+                    <td>{student.name}</td>
+                    <td>
+                      <div className={styles.progressCell}>
+                        <ProgressBar value={student.progress} />
+                        <span className={styles.progressText}>{student.progress}%</span>
+                      </div>
+                    </td>
+                    <td>{student.missions}</td>
+                    <td>{student.lastAccess}</td>
+                    <td>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={styles.deleteButton}
+                        disabled={deletingId === student.id}
+                        onClick={(e) => handleDelete(e, student.id, student.name)}
+                      >
+                        {deletingId === student.id ? "삭제 중..." : "삭제"}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

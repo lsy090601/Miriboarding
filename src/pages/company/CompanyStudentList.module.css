@@ -1,57 +1,57 @@
 .page {
   min-height: 100vh;
-  padding: 32px 20px;
-  background: #f8f9fb;
+  background: var(--color-bg-app);
 }
 
 .container {
-  max-width: 720px;
+  max-width: 960px;
   margin: 0 auto;
+  padding: 40px 80px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .header {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.backButton {
-  align-self: flex-start;
-  background: none;
-  border: none;
-  font-size: 14px;
-  color: #666;
-  cursor: pointer;
-  padding: 0;
+  align-items: flex-start;
+  gap: 14px;
 }
 
 .title {
-  font-size: 22px;
+  margin: 0;
+  font-size: 24px;
   font-weight: 700;
+  color: var(--color-text);
+}
+
+.tableWrap {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .table th {
   text-align: left;
-  padding: 12px 16px;
-  font-size: 12px;
-  color: #888;
-  background: #f1f3f5;
+  padding: 14px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
 }
 
 .table td {
-  padding: 14px 16px;
+  padding: 16px 20px;
   font-size: 14px;
-  border-top: 1px solid #eee;
+  color: var(--color-text);
+  border-top: 1px solid var(--color-border);
 }
 
 .row {
@@ -59,41 +59,28 @@
 }
 
 .row:hover {
-  background: #f8f9fb;
+  background: var(--color-surface);
 }
 
-.progressBarWrap {
-  width: 80px;
-  height: 6px;
-  background: #eee;
-  border-radius: 4px;
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 8px;
+.progressCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 160px;
 }
 
-.progressBar {
-  height: 100%;
-  background: var(--color-primary);
-  border-radius: 4px;
+.progressCell > :first-child {
+  flex: 1;
 }
 
 .progressText {
-  font-size: 12px;
-  color: #666;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
 }
 
 .deleteButton {
-  background: none;
-  border: 1px solid #e0a0a0;
-  color: #c62828;
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.deleteButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  color: var(--color-error) !important;
+  border-color: rgba(214, 69, 69, 0.35) !important;
 }

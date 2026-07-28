@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import * as api from "../../lib/api.js";
 import { getOnboardingDetail } from "../../mock/company.js";
-import FallbackBanner from "../../components/FallbackBanner/FallbackBanner.jsx";
+import Banner from "../../components/Banner/Banner.jsx";
+import Button from "../../components/Button/Button.jsx";
+import Input from "../../components/Input/Input.jsx";
+import Select from "../../components/Select/Select.jsx";
+import Tabs from "../../components/Tabs/Tabs.jsx";
 import styles from "./CompanyOnboardingEdit.module.css";
 
 const TABS = [
@@ -12,11 +16,13 @@ const TABS = [
   { key: "mission", label: "미션" },
 ];
 
-const IMPORTANCE_OPTIONS = [
-  { value: "low", label: "낮음" },
-  { value: "medium", label: "중간" },
-  { value: "high", label: "높음" },
-];
+const IMPORTANCE_OPTIONS = ["낮음", "중간", "높음"];
+const IMPORTANCE_VALUE_TO_LABEL = { low: "낮음", medium: "중간", high: "높음" };
+const IMPORTANCE_LABEL_TO_VALUE = { 낮음: "low", 중간: "medium", 높음: "high" };
+
+const SUBMISSION_TYPE_OPTIONS = ["텍스트 제출", "파일 제출", "선택지 제출"];
+const SUBMISSION_VALUE_TO_LABEL = { text: "텍스트 제출", file: "파일 제출", choice: "선택지 제출" };
+const SUBMISSION_LABEL_TO_VALUE = { "텍스트 제출": "text", "파일 제출": "file", "선택지 제출": "choice" };
 
 const EMPTY_SCHEDULES = { day: [], week: [], month: [] };
 
@@ -89,9 +95,7 @@ export default function CompanyOnboardingEdit() {
   function updateScheduleField(period, id, field, value) {
     setSchedules((prev) => ({
       ...prev,
-      [period]: prev[period].map((item) =>
-        item.id === id ? { ...item, [field]: value } : item,
-      ),
+      [period]: prev[period].map((item) => (item.id === id ? { ...item, [field]: value } : item)),
     }));
   }
 
@@ -115,11 +119,7 @@ export default function CompanyOnboardingEdit() {
   }
 
   function updateMissionField(id, field, value) {
-    setMissions((prev) =>
-      prev.map((mission) =>
-        mission.id === id ? { ...mission, [field]: value } : mission,
-      ),
-    );
+    setMissions((prev) => prev.map((mission) => (mission.id === id ? { ...mission, [field]: value } : mission)));
   }
 
   function addMission() {
@@ -174,16 +174,10 @@ export default function CompanyOnboardingEdit() {
   if (!detail) {
     return (
       <div className={styles.page}>
-        <p>
-          온보딩 정보를 찾을 수 없어요. (임시 데이터라 등록된 companyId만
-          조회돼요)
-        </p>
-        <button
-          type="button"
-          onClick={() => navigate("/company/onboarding-list")}
-        >
+        <p>온보딩 정보를 찾을 수 없어요. (임시 데이터라 등록된 companyId만 조회돼요)</p>
+        <Button variant="outline" size="sm" onClick={() => navigate("/company/onboarding-list")}>
           목록으로
-        </button>
+        </Button>
       </div>
     );
   }
@@ -191,113 +185,59 @@ export default function CompanyOnboardingEdit() {
   return (
     <div className={styles.page}>
       <div className={styles.container}>
-        <button
-          type="button"
-          className={styles.backButton}
-          onClick={() => navigate("/company/onboarding-list")}
-        >
+        <Button variant="outline" size="sm" onClick={() => navigate("/company/onboarding-list")}>
           ← 뒤로가기
-        </button>
+        </Button>
         <h1 className={styles.title}>
           {detail.companyName} · {detail.jobTitle} 온보딩 수정
         </h1>
 
-        {isMock && <FallbackBanner />}
+        {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
 
-        <div className={styles.tabRow}>
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              className={`${styles.tabButton} ${activeTab === tab.key ? styles.tabButtonActive : ""}`}
-              onClick={() => setActiveTab(tab.key)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <Tabs items={TABS} active={activeTab} onChange={setActiveTab} />
 
         {activeTab !== "mission" && (
           <div className={styles.scheduleSection}>
             {schedules[activeTab].map((item) => (
               <div key={item.id} className={styles.scheduleRow}>
-                <input
-                  className={styles.smallInput}
-                  placeholder={
-                    activeTab === "day" ? "시간 (예: 10:00~11:00)" : "요일/일차"
-                  }
-                  value={
-                    activeTab === "day" ? (item.time ?? "") : (item.day ?? "")
-                  }
+                <Input
+                  placeholder={activeTab === "day" ? "시간 (예: 10:00~11:00)" : "요일/일차"}
+                  value={activeTab === "day" ? (item.time ?? "") : (item.day ?? "")}
                   onChange={(e) =>
-                    updateScheduleField(
-                      activeTab,
-                      item.id,
-                      activeTab === "day" ? "time" : "day",
-                      e.target.value,
-                    )
+                    updateScheduleField(activeTab, item.id, activeTab === "day" ? "time" : "day", e.target.value)
                   }
                 />
-                <input
-                  className={styles.input}
+                <Input
                   placeholder="활동 내용"
                   value={item.activity ?? ""}
-                  onChange={(e) =>
-                    updateScheduleField(
-                      activeTab,
-                      item.id,
-                      "activity",
-                      e.target.value,
-                    )
-                  }
+                  onChange={(e) => updateScheduleField(activeTab, item.id, "activity", e.target.value)}
                 />
-                <select
-                  className={styles.smallInput}
-                  value={item.importance ?? "medium"}
+                <Select
+                  value={IMPORTANCE_VALUE_TO_LABEL[item.importance ?? "medium"]}
                   onChange={(e) =>
-                    updateScheduleField(
-                      activeTab,
-                      item.id,
-                      "importance",
-                      e.target.value,
-                    )
+                    updateScheduleField(activeTab, item.id, "importance", IMPORTANCE_LABEL_TO_VALUE[e.target.value])
                   }
-                >
-                  {IMPORTANCE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  className={styles.input}
+                  options={IMPORTANCE_OPTIONS}
+                  placeholder="중요도"
+                />
+                <Input
                   placeholder="관련 용어 (쉼표로 구분)"
                   value={item.terms ?? ""}
-                  onChange={(e) =>
-                    updateScheduleField(
-                      activeTab,
-                      item.id,
-                      "terms",
-                      e.target.value,
-                    )
-                  }
+                  onChange={(e) => updateScheduleField(activeTab, item.id, "terms", e.target.value)}
                 />
-                <button
-                  type="button"
+                <Button
+                  variant="outline"
+                  size="sm"
                   className={styles.deleteButton}
                   onClick={() => removeScheduleItem(activeTab, item.id)}
                 >
                   삭제
-                </button>
+                </Button>
               </div>
             ))}
-            <button
-              type="button"
-              className={styles.addButton}
-              onClick={() => addScheduleItem(activeTab)}
-            >
+            <Button variant="outline" size="sm" onClick={() => addScheduleItem(activeTab)}>
               + 항목 추가
-            </button>
+            </Button>
           </div>
         )}
 
@@ -305,76 +245,49 @@ export default function CompanyOnboardingEdit() {
           <div className={styles.missionSection}>
             {missions.map((mission) => (
               <div key={mission.id} className={styles.missionCard}>
-                <input
-                  className={styles.input}
+                <Input
+                  label="미션 제목"
                   placeholder="미션 제목"
                   value={mission.title ?? ""}
-                  onChange={(e) =>
-                    updateMissionField(mission.id, "title", e.target.value)
-                  }
+                  onChange={(e) => updateMissionField(mission.id, "title", e.target.value)}
                 />
-                <textarea
-                  className={styles.textarea}
+                <Input
+                  multiline
+                  rows={3}
+                  label="미션 설명"
                   placeholder="미션 설명"
                   value={mission.description ?? ""}
-                  onChange={(e) =>
-                    updateMissionField(
-                      mission.id,
-                      "description",
-                      e.target.value,
-                    )
-                  }
+                  onChange={(e) => updateMissionField(mission.id, "description", e.target.value)}
                 />
-                <select
-                  className={styles.smallInput}
-                  value={mission.submissionType ?? "text"}
-                  onChange={(e) =>
-                    updateMissionField(
-                      mission.id,
-                      "submissionType",
-                      e.target.value,
-                    )
-                  }
-                >
-                  <option value="text">텍스트 제출</option>
-                  <option value="file">파일 제출</option>
-                  <option value="choice">선택지 제출</option>
-                </select>
-                <button
-                  type="button"
-                  className={styles.deleteButton}
-                  onClick={() => removeMission(mission.id)}
-                >
-                  삭제
-                </button>
+                <div className={styles.missionCardFooter}>
+                  <Select
+                    label="제출 유형"
+                    value={SUBMISSION_VALUE_TO_LABEL[mission.submissionType ?? "text"]}
+                    onChange={(e) =>
+                      updateMissionField(mission.id, "submissionType", SUBMISSION_LABEL_TO_VALUE[e.target.value])
+                    }
+                    options={SUBMISSION_TYPE_OPTIONS}
+                    placeholder="제출 유형"
+                  />
+                  <Button variant="outline" size="sm" className={styles.deleteButton} onClick={() => removeMission(mission.id)}>
+                    삭제
+                  </Button>
+                </div>
               </div>
             ))}
-            <button
-              type="button"
-              className={styles.addButton}
-              onClick={addMission}
-            >
+            <Button variant="outline" size="sm" onClick={addMission}>
               + 새 미션 추가
-            </button>
+            </Button>
           </div>
         )}
 
         <div className={styles.footerButtons}>
-          <button
-            type="button"
-            className={styles.cancelButton}
-            onClick={() => navigate("/company/onboarding-list")}
-          >
+          <Button variant="outline" onClick={() => navigate("/company/onboarding-list")}>
             취소
-          </button>
-          <button
-            type="button"
-            className={styles.saveButton}
-            onClick={handleSave}
-            disabled={isSaving}
-          >
+          </Button>
+          <Button variant="primary" onClick={handleSave} disabled={isSaving}>
             {isSaving ? "저장 중..." : "저장하기"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
