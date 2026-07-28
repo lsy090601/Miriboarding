@@ -17,6 +17,8 @@ import {
   registerStudentsHandler,
   sendMissionFeedbackHandler,
   getStudentEnrollmentsHandler,
+  updateStudentTargetDateHandler,
+  removeStudentEnrollmentHandler,
 } from '../controllers/onboarding.controller.js'
 
 const router = Router()
@@ -38,5 +40,7 @@ router.get('/:companyId/students/:studentId', getStudentDetailHandler)
 router.post('/:companyId/students/register', registerStudentsHandler)
 router.post('/submissions/:submissionId/feedback', sendMissionFeedbackHandler)
 router.get('/student/:studentId/enrollments', getStudentEnrollmentsHandler)
+router.put('/:companyId/students/:studentId/target-date', updateStudentTargetDateHandler)
+router.delete('/:companyId/students/:studentId', removeStudentEnrollmentHandler)
 
 export default router

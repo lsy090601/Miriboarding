@@ -259,7 +259,31 @@ export async function enrollStudent(companyId, studentId) {
     throw new OnboardingError(502, 'SUPABASE_ERROR', '등록 정보 저장 중 오류가 발생했습니다.')
   }
 
-  return { enrollmentId: data.id }
+  return { enrollmentId: data.id, targetDate: data.target_date }
+}
+
+export async function removeStudentEnrollment(companyId, studentId) {
+  if (!isNonEmptyString(companyId) || !isNonEmptyString(studentId)) {
+    throw new OnboardingError(400, 'INVALID_INPUT', 'companyId, studentId가 필요합니다.')
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('student_enrollment')
+    .delete()
+    .eq('company_id', companyId)
+    .eq('student_id', studentId)
+    .select('id')
+    .maybeSingle()
+
+  if (error) {
+    console.error('[onboarding] removeStudentEnrollment 실패:', error)
+    throw new OnboardingError(502, 'SUPABASE_ERROR', '학생 삭제 중 오류가 발생했습니다.')
+  }
+  if (!data) {
+    throw new OnboardingError(404, 'NOT_FOUND', '등록된 학생을 찾을 수 없습니다.')
+  }
+
+  return { success: true }
 }
 
 export async function getEnrollment(companyId, studentId) {
@@ -269,7 +293,7 @@ export async function getEnrollment(companyId, studentId) {
 
   const { data, error } = await supabaseAdmin
     .from('student_enrollment')
-    .select('id')
+    .select('id, target_date')
     .eq('company_id', companyId)
     .eq('student_id', studentId)
     .maybeSingle()
@@ -282,7 +306,31 @@ export async function getEnrollment(companyId, studentId) {
     throw new OnboardingError(404, 'NOT_FOUND', '등록 정보를 찾을 수 없습니다.')
   }
 
-  return { enrollmentId: data.id }
+  return { enrollmentId: data.id, targetDate: data.target_date }
+}
+
+export async function updateStudentTargetDate(companyId, studentId, targetDate) {
+  if (!isNonEmptyString(companyId) || !isNonEmptyString(studentId)) {
+    throw new OnboardingError(400, 'INVALID_INPUT', 'companyId, studentId가 필요합니다.')
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('student_enrollment')
+    .update({ target_date: targetDate ?? null })
+    .eq('company_id', companyId)
+    .eq('student_id', studentId)
+    .select('id, target_date')
+    .maybeSingle()
+
+  if (error) {
+    console.error('[onboarding] updateStudentTargetDate 실패:', error)
+    throw new OnboardingError(502, 'SUPABASE_ERROR', '실습 시작일 저장 중 오류가 발생했습니다.')
+  }
+  if (!data) {
+    throw new OnboardingError(404, 'NOT_FOUND', '등록된 학생을 찾을 수 없습니다.')
+  }
+
+  return { success: true, targetDate: data.target_date }
 }
 
 export async function submitMission(enrollmentId, missionId, content) {
@@ -424,7 +472,7 @@ export async function getStudentDetail(companyId, studentId) {
 
   const { data: enrollment, error: enrollmentError } = await supabaseAdmin
     .from('student_enrollment')
-    .select('id')
+    .select('id, target_date')
     .eq('company_id', companyId)
     .eq('student_id', studentId)
     .maybeSingle()
@@ -495,6 +543,7 @@ export async function getStudentDetail(companyId, studentId) {
     school: student?.school ?? '',
     age: student?.age ?? null,
     email: userRow?.email ?? '',
+    targetDate: enrollment.target_date,
     progress: missions.length ? Math.round((completedMissions.length / missions.length) * 100) : 0,
     completedMissions,
     incompletedMissions,

@@ -15,6 +15,8 @@ export default function CompanyStudentDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [feedbackDrafts, setFeedbackDrafts] = useState({});
   const [sendingId, setSendingId] = useState(null);
+  const [targetDateDraft, setTargetDateDraft] = useState("");
+  const [isSavingTargetDate, setIsSavingTargetDate] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -25,6 +27,7 @@ export default function CompanyStudentDetail() {
         const data = await api.getStudentDetail(companyId, studentId);
         if (cancelled) return;
         setStudent(data);
+        setTargetDateDraft(data.targetDate ?? "");
         setIsMock(false);
       } catch (error) {
         console.error("학생 상세 API 연동 실패, mock으로 폴백합니다:", error);
@@ -66,6 +69,24 @@ export default function CompanyStudentDetail() {
       alert(error.message ?? "피드백 전송 중 오류가 발생했습니다.");
     } finally {
       setSendingId(null);
+    }
+  }
+
+  async function handleSaveTargetDate() {
+    if (isMock) {
+      alert("저장되었습니다. (mock)");
+      return;
+    }
+
+    setIsSavingTargetDate(true);
+    try {
+      const companyId = getCurrentCompanyId();
+      await api.updateStudentTargetDate(companyId, studentId, targetDateDraft || null);
+      setStudent((prev) => ({ ...prev, targetDate: targetDateDraft || null }));
+    } catch (error) {
+      alert(error.message ?? "실습 시작일 저장 중 오류가 발생했습니다.");
+    } finally {
+      setIsSavingTargetDate(false);
     }
   }
 
@@ -119,6 +140,27 @@ export default function CompanyStudentDetail() {
           <span className={styles.progressText}>
             온보딩 진도 {student.progress}%
           </span>
+
+          <div className={styles.targetDateRow}>
+            <label className={styles.targetDateLabel} htmlFor="targetDate">
+              실습 시작일
+            </label>
+            <input
+              id="targetDate"
+              type="date"
+              className={styles.targetDateInput}
+              value={targetDateDraft}
+              onChange={(e) => setTargetDateDraft(e.target.value)}
+            />
+            <button
+              type="button"
+              className={styles.targetDateSaveButton}
+              disabled={isSavingTargetDate}
+              onClick={handleSaveTargetDate}
+            >
+              {isSavingTargetDate ? "저장 중..." : "저장"}
+            </button>
+          </div>
         </div>
 
         <div className={styles.missionSection}>

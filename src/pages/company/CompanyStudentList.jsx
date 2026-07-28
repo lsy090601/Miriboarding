@@ -12,6 +12,7 @@ export default function CompanyStudentList() {
   const [students, setStudents] = useState([]);
   const [isMock, setIsMock] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,6 +48,30 @@ export default function CompanyStudentList() {
     };
   }, []);
 
+  async function handleDelete(e, studentId, studentName) {
+    e.stopPropagation();
+    if (!window.confirm(`${studentName} 학생을 삭제할까요? 진행 상황과 제출 내역도 함께 삭제됩니다.`)) {
+      return;
+    }
+
+    if (isMock) {
+      alert("삭제되었습니다. (mock)");
+      setStudents((prev) => prev.filter((student) => student.id !== studentId));
+      return;
+    }
+
+    setDeletingId(studentId);
+    try {
+      const companyId = getCurrentCompanyId();
+      await api.removeStudent(companyId, studentId);
+      setStudents((prev) => prev.filter((student) => student.id !== studentId));
+    } catch (error) {
+      alert(error.message ?? "학생 삭제 중 오류가 발생했습니다.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.container}>
@@ -75,6 +100,7 @@ export default function CompanyStudentList() {
                 <th>온보딩 진도</th>
                 <th>미션 완료</th>
                 <th>최근 접속일</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -98,6 +124,16 @@ export default function CompanyStudentList() {
                   </td>
                   <td>{student.missions}</td>
                   <td>{student.lastAccess}</td>
+                  <td>
+                    <button
+                      type="button"
+                      className={styles.deleteButton}
+                      disabled={deletingId === student.id}
+                      onClick={(e) => handleDelete(e, student.id, student.name)}
+                    >
+                      {deletingId === student.id ? "삭제 중..." : "삭제"}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
