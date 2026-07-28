@@ -2,15 +2,23 @@
   width: 100%;
 }
 
+.label {
+  display: block;
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
 .wrapper {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
+  height: var(--field-height);
   padding: 0 22px;
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-pill);
-  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
 }
 
 .wrapperError {
@@ -25,30 +33,30 @@
   outline: none;
   background: transparent;
   appearance: none;
-  font-size: 18px;
-  font-weight: 300;
-  color: rgba(26, 42, 128, 0.55);
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--color-text-muted);
   cursor: pointer;
 }
 
 .select.hasValue {
-  color: var(--color-primary);
+  color: var(--color-text);
 }
 
-.icon {
+.chevron {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  color: var(--color-primary);
+  width: 18px;
+  height: 18px;
+  color: var(--color-text-muted);
   flex-shrink: 0;
   margin-left: 12px;
   pointer-events: none;
 }
 
 .errorText {
-  margin: 6px 0 0 22px;
+  margin: 6px 0 0 2px;
   font-size: 13px;
   color: var(--color-error);
 }

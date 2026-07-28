@@ -4,6 +4,7 @@ import styles from './DuplicateCheckField.module.css'
 
 export default function DuplicateCheckField({
   icon,
+  label,
   name,
   value,
   onChange,
@@ -15,8 +16,14 @@ export default function DuplicateCheckField({
 }) {
   return (
     <div className={styles.field}>
+      {label && (
+        <label className={styles.label} htmlFor={name}>
+          {label}
+        </label>
+      )}
       <div className={styles.row}>
         <Input
+          id={name}
           icon={icon}
           type="email"
           name={name}

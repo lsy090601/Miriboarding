@@ -1,0 +1,37 @@
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: var(--radius-field);
+}
+
+.success {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.iconDot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.icon {
+  width: 13px;
+  height: 13px;
+  color: var(--color-white);
+}
+
+.text {
+  margin: 0;
+  flex: 1;
+  font-size: 16px;
+  font-weight: 700;
+}
