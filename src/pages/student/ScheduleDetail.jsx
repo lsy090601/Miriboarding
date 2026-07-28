@@ -3,9 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom'
 import * as api from '../../lib/api.js'
 import { getJobById, getScheduleById, IMPORTANCE_LABEL, JOB_SLUG_META } from '../../mock/jobs.js'
 import Modal from '../../components/Modal/Modal.jsx'
-import FallbackBanner from '../../components/FallbackBanner/FallbackBanner.jsx'
+import Banner from '../../components/Banner/Banner.jsx'
 import Nav from '../../components/Nav/Nav.jsx'
+import Button from '../../components/Button/Button.jsx'
+import Badge from '../../components/Badge/Badge.jsx'
+import Chip from '../../components/Chip/Chip.jsx'
 import styles from './ScheduleDetail.module.css'
+
+const IMPORTANCE_TONE = { high: 'error', medium: 'warning', low: 'info' }
 
 export default function ScheduleDetail() {
   const { jobId, scheduleId } = useParams()
@@ -70,9 +75,9 @@ export default function ScheduleDetail() {
         <Nav />
         <div className={styles.page}>
           <div className={styles.container}>
-            <button type="button" className={styles.backButton} onClick={() => navigate('/student/explore')}>
-              직무 선택으로 돌아가기
-            </button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/student/explore')}>
+              ← 직무 선택으로 돌아가기
+            </Button>
             <p>존재하지 않는 일정이에요.</p>
           </div>
         </div>
@@ -84,46 +89,35 @@ export default function ScheduleDetail() {
     <>
       <Nav />
       <div className={styles.page}>
-      <div className={styles.container}>
-        <button
-          type="button"
-          className={styles.backButton}
-          onClick={() => navigate(`/student/explore/${job.id}`)}
-        >
-          직무 일정으로 돌아가기
-        </button>
+        <div className={styles.container}>
+          <Button variant="outline" size="sm" onClick={() => navigate(`/student/explore/${job.id}`)}>
+            ← 직무 일정으로 돌아가기
+          </Button>
 
-        {isMock && <FallbackBanner />}
+          {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
 
-        <div className={styles.header}>
-          <h1 className={styles.title}>{schedule.title}</h1>
-          <span className={`${styles.importance} ${styles[`importance-${schedule.importance}`]}`}>
-            {IMPORTANCE_LABEL[schedule.importance]}
-          </span>
+          <div className={styles.header}>
+            <h1 className={styles.title}>{schedule.title}</h1>
+            <Badge tone={IMPORTANCE_TONE[schedule.importance]}>{IMPORTANCE_LABEL[schedule.importance]}</Badge>
+          </div>
+
+          <p className={styles.description}>{schedule.description}</p>
+
+          <h2 className={styles.termsTitle}>관련 용어</h2>
+          <div className={styles.termList}>
+            {(schedule.terms ?? []).map((term) => (
+              <Chip key={term.term} onClick={() => setActiveTerm(term)}>
+                {term.term}
+              </Chip>
+            ))}
+          </div>
         </div>
 
-        <p className={styles.description}>{schedule.description}</p>
-
-        <h2 className={styles.termsTitle}>관련 용어</h2>
-        <div className={styles.termList}>
-          {(schedule.terms ?? []).map((term) => (
-            <button
-              key={term.term}
-              type="button"
-              className={styles.termChip}
-              onClick={() => setActiveTerm(term)}
-            >
-              {term.term}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {activeTerm && (
-        <Modal title={activeTerm.term} onClose={() => setActiveTerm(null)}>
-          <p>{activeTerm.description}</p>
-        </Modal>
-      )}
+        {activeTerm && (
+          <Modal title={activeTerm.term} onClose={() => setActiveTerm(null)}>
+            <p>{activeTerm.description}</p>
+          </Modal>
+        )}
       </div>
     </>
   )

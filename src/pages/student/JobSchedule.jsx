@@ -2,8 +2,12 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import * as api from '../../lib/api.js'
 import { getJobById, IMPORTANCE_LABEL, JOB_SLUG_META } from '../../mock/jobs.js'
-import FallbackBanner from '../../components/FallbackBanner/FallbackBanner.jsx'
+import Banner from '../../components/Banner/Banner.jsx'
 import Nav from '../../components/Nav/Nav.jsx'
+import Button from '../../components/Button/Button.jsx'
+import Tabs from '../../components/Tabs/Tabs.jsx'
+import ActionCard from '../../components/ActionCard/ActionCard.jsx'
+import Badge from '../../components/Badge/Badge.jsx'
 import styles from './JobSchedule.module.css'
 
 const TABS = [
@@ -11,6 +15,8 @@ const TABS = [
   { key: 'week', label: '1주' },
   { key: 'month', label: '1달' },
 ]
+
+const IMPORTANCE_TONE = { high: 'error', medium: 'warning', low: 'info' }
 
 export default function JobSchedule() {
   const { jobId } = useParams()
@@ -73,9 +79,9 @@ export default function JobSchedule() {
         <Nav />
         <div className={styles.page}>
           <div className={styles.container}>
-            <button type="button" className={styles.backButton} onClick={() => navigate('/student/explore')}>
-              직무 선택으로 돌아가기
-            </button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/student/explore')}>
+              ← 직무 선택으로 돌아가기
+            </Button>
             <p>존재하지 않는 직무예요.</p>
           </div>
         </div>
@@ -89,49 +95,33 @@ export default function JobSchedule() {
     <>
       <Nav />
       <div className={styles.page}>
-      <div className={styles.container}>
-        <button type="button" className={styles.backButton} onClick={() => navigate('/student/explore')}>
-          직무 선택으로 돌아가기
-        </button>
+        <div className={styles.container}>
+          <Button variant="outline" size="sm" onClick={() => navigate('/student/explore')}>
+            ← 직무 선택으로 돌아가기
+          </Button>
 
-        {isMock && <FallbackBanner />}
+          {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
 
-        <div className={styles.header}>
-          <span className={styles.icon}>{job.icon}</span>
-          <h1 className={styles.title}>{job.name}</h1>
-        </div>
-        <p className={styles.subtitle}>하루/주/달의 일정을 탭으로 전환하며 확인해보세요</p>
+          <div className={styles.header}>
+            <span className={styles.icon}>{job.icon}</span>
+            <h1 className={styles.title}>{job.name}</h1>
+          </div>
+          <p className={styles.subtitle}>하루/주/달의 일정을 탭으로 전환하며 확인해보세요</p>
 
-        <div className={styles.tabs}>
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              className={`${styles.tab} ${activeTab === tab.key ? styles.tabActive : ''}`}
-              onClick={() => setActiveTab(tab.key)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+          <Tabs items={TABS} active={activeTab} onChange={setActiveTab} />
 
-        <ul className={styles.scheduleList}>
-          {schedules.map((schedule) => (
-            <li key={schedule.id}>
-              <button
-                type="button"
-                className={styles.scheduleItem}
+          <div className={styles.scheduleList}>
+            {schedules.map((schedule) => (
+              <ActionCard
+                key={schedule.id}
+                layout="row"
+                title={schedule.title}
+                badge={<Badge tone={IMPORTANCE_TONE[schedule.importance]}>{IMPORTANCE_LABEL[schedule.importance]}</Badge>}
                 onClick={() => navigate(`/student/explore/${job.id}/detail/${schedule.id}`)}
-              >
-                <span className={styles.scheduleTitle}>{schedule.title}</span>
-                <span className={`${styles.importance} ${styles[`importance-${schedule.importance}`]}`}>
-                  {IMPORTANCE_LABEL[schedule.importance]}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </>
   )

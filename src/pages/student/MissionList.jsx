@@ -3,8 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom'
 import * as api from '../../lib/api.js'
 import { getCurrentStudentId } from '../../lib/auth.js'
 import { getOnboardingByCompanyId, getMissionProgress, SUBMISSION_TYPE_LABEL } from '../../mock/onboarding.js'
-import FallbackBanner from '../../components/FallbackBanner/FallbackBanner.jsx'
+import Banner from '../../components/Banner/Banner.jsx'
 import Nav from '../../components/Nav/Nav.jsx'
+import Button from '../../components/Button/Button.jsx'
+import ActionCard from '../../components/ActionCard/ActionCard.jsx'
+import Badge from '../../components/Badge/Badge.jsx'
+import ProgressBar from '../../components/ProgressBar/ProgressBar.jsx'
 import styles from './MissionList.module.css'
 
 export default function MissionList() {
@@ -60,9 +64,9 @@ export default function MissionList() {
         <Nav />
         <div className={styles.page}>
           <div className={styles.container}>
-            <button type="button" className={styles.backButton} onClick={() => navigate('/student/home')}>
+            <Button variant="outline" size="sm" onClick={() => navigate('/student/home')}>
               ← 뒤로가기
-            </button>
+            </Button>
             <p>존재하지 않는 온보딩이에요.</p>
           </div>
         </div>
@@ -77,50 +81,32 @@ export default function MissionList() {
     <>
       <Nav />
       <div className={styles.page}>
-      <div className={styles.container}>
-        <button
-          type="button"
-          className={styles.backButton}
-          onClick={() => navigate(`/student/onboarding/${companyId}`)}
-        >
-          ← 뒤로가기
-        </button>
+        <div className={styles.container}>
+          <Button variant="outline" size="sm" onClick={() => navigate(`/student/onboarding/${companyId}`)}>
+            ← 뒤로가기
+          </Button>
 
-        {isMock && <FallbackBanner />}
+          {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
 
-        <h1 className={styles.title}>미션</h1>
+          <h1 className={styles.title}>미션</h1>
 
-        <div className={styles.progressSection}>
-          <div className={styles.progressHeader}>
-            <span>진행률</span>
-            <span>{completed}/{total} 완료</span>
+          <div className={styles.progressSection}>
+            <ProgressBar label="진행률" valueLabel={`${completed}/${total} 완료`} value={progressPercent} />
           </div>
-          <div className={styles.progressBar}>
-            <div className={styles.progressBarFill} style={{ width: `${progressPercent}%` }} />
+
+          <div className={styles.missionList}>
+            {onboarding.missions.map((mission) => (
+              <ActionCard
+                key={mission.id}
+                title={mission.title}
+                description={mission.description}
+                meta={SUBMISSION_TYPE_LABEL[mission.submissionType]}
+                badge={<Badge tone={mission.completed ? 'success' : 'neutral'}>{mission.completed ? '완료' : '미완료'}</Badge>}
+                onClick={() => navigate(`/student/onboarding/${companyId}/missions/${mission.id}`)}
+              />
+            ))}
           </div>
         </div>
-
-        <ul className={styles.missionList}>
-          {onboarding.missions.map((mission) => (
-            <li key={mission.id}>
-              <button
-                type="button"
-                className={styles.missionCard}
-                onClick={() => navigate(`/student/onboarding/${companyId}/missions/${mission.id}`)}
-              >
-                <div className={styles.missionHeader}>
-                  <span className={`${styles.statusBadge} ${mission.completed ? styles.statusDone : styles.statusPending}`}>
-                    {mission.completed ? '완료' : '미완료'}
-                  </span>
-                  <span className={styles.submissionType}>{SUBMISSION_TYPE_LABEL[mission.submissionType]}</span>
-                </div>
-                <span className={styles.missionTitle}>{mission.title}</span>
-                <span className={styles.missionDesc}>{mission.description}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
       </div>
     </>
   )

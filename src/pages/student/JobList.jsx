@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as api from '../../lib/api.js'
 import { jobs as mockJobs, JOB_SLUG_META } from '../../mock/jobs.js'
-import FallbackBanner from '../../components/FallbackBanner/FallbackBanner.jsx'
+import Banner from '../../components/Banner/Banner.jsx'
 import Nav from '../../components/Nav/Nav.jsx'
+import ActionCard from '../../components/ActionCard/ActionCard.jsx'
 import styles from './JobList.module.css'
 
 export default function JobList() {
@@ -61,29 +62,25 @@ export default function JobList() {
     <>
       <Nav />
       <div className={styles.page}>
-      <div className={styles.container}>
-        <h1 className={styles.title}>직무 체험하기</h1>
-        <p className={styles.subtitle}>체험하고 싶은 직무를 선택해보세요</p>
+        <div className={styles.container}>
+          <h1 className={styles.title}>직무 체험하기</h1>
+          <p className={styles.subtitle}>체험하고 싶은 직무를 선택해보세요</p>
 
-        {isMock && <FallbackBanner />}
+          {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
 
-        <div className={styles.grid}>
-          {jobList.map((job) => (
-            <button
-              key={job.id}
-              type="button"
-              className={styles.card}
-              onClick={() => navigate(`/student/explore/${job.id}`)}
-            >
-              <span className={styles.cardTop}>
-                <span className={styles.name}>{job.name}</span>
-                <span className={styles.tagline}>{job.tagline}</span>
-              </span>
-              <span className={styles.cta}>체험하기</span>
-            </button>
-          ))}
+          <div className={styles.grid}>
+            {jobList.map((job) => (
+              <ActionCard
+                key={job.id}
+                icon={job.icon}
+                title={job.name}
+                description={job.tagline}
+                meta="체험하기"
+                onClick={() => navigate(`/student/explore/${job.id}`)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
       </div>
     </>
   )
