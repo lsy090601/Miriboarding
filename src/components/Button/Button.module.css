@@ -47,3 +47,11 @@
   font-weight: 500;
   padding: 0;
 }
+
+.sm {
+  width: auto;
+  height: 40px;
+  padding: 0 18px;
+  font-size: 14px;
+  border-radius: 10px;
+}

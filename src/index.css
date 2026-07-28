@@ -19,6 +19,11 @@
   --color-text: #16192e;
   --color-text-muted: #6b7391;
   --color-success: #2e9e5b;
+  --color-warning-bg: #fff4e0;
+  --color-warning-text: #8a5a00;
+
+  /* 앱 내부(대시보드 등) 화면 배경 */
+  --color-bg-app: #f9fafd;
 
   --radius-field: 14px;
   --radius-card: 20px;
@@ -27,6 +32,7 @@
 
   --field-height: 58px;
   --button-height: 60px;
+  --nav-height: 88px;
 
   --font-body: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
   --font-logo: 'Jalnan2', var(--font-body);

@@ -5,6 +5,7 @@ export default function Button({
   onClick,
   type = 'button',
   variant = 'primary',
+  size = 'md',
   disabled = false,
   className = '',
 }) {
@@ -13,7 +14,7 @@ export default function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${styles.button} ${styles[variant] ?? ''} ${className}`}
+      className={`${styles.button} ${styles[variant] ?? ''} ${styles[size] ?? ''} ${className}`}
     >
       {children}
     </button>

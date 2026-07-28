@@ -13,6 +13,8 @@ export default function Input({
   autoComplete,
   inputMode,
   id,
+  multiline = false,
+  rows = 4,
 }) {
   const fieldId = id ?? name
 
@@ -23,21 +25,37 @@ export default function Input({
           {label}
         </label>
       )}
-      <div className={`${styles.wrapper} ${error ? styles.wrapperError : ''}`}>
-        <input
-          id={fieldId}
-          className={styles.input}
-          type={type}
-          name={name}
-          value={value}
-          onChange={onChange}
-          onBlur={onBlur}
-          placeholder={placeholder}
-          aria-label={label ?? placeholder}
-          autoComplete={autoComplete}
-          inputMode={inputMode}
-        />
-        {icon && <span className={styles.icon}>{icon}</span>}
+      <div
+        className={`${styles.wrapper} ${multiline ? styles.wrapperMultiline : ''} ${error ? styles.wrapperError : ''}`}
+      >
+        {multiline ? (
+          <textarea
+            id={fieldId}
+            className={styles.textarea}
+            name={name}
+            value={value}
+            onChange={onChange}
+            onBlur={onBlur}
+            placeholder={placeholder}
+            aria-label={label ?? placeholder}
+            rows={rows}
+          />
+        ) : (
+          <input
+            id={fieldId}
+            className={styles.input}
+            type={type}
+            name={name}
+            value={value}
+            onChange={onChange}
+            onBlur={onBlur}
+            placeholder={placeholder}
+            aria-label={label ?? placeholder}
+            autoComplete={autoComplete}
+            inputMode={inputMode}
+          />
+        )}
+        {icon && !multiline && <span className={styles.icon}>{icon}</span>}
       </div>
       {error && <p className={styles.errorText}>{error}</p>}
     </div>
