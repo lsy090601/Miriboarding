@@ -528,6 +528,7 @@ export async function getStudentDetail(companyId, studentId) {
       completedMissions.push({
         id: mission.id,
         title: mission.title,
+        submissionType: mission.submissionType ?? 'text',
         submissionId: submission.id,
         content: submission.content,
         feedback: submission.feedback,

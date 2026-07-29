@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import multer from 'multer'
 import {
   generateHandler,
   getOnboardingHandler,
@@ -19,9 +20,11 @@ import {
   getStudentEnrollmentsHandler,
   updateStudentTargetDateHandler,
   removeStudentEnrollmentHandler,
+  uploadMissionFileHandler,
 } from '../controllers/onboarding.controller.js'
 
 const router = Router()
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } })
 
 router.post('/generate', generateHandler)
 router.get('/:companyId', getOnboardingHandler)
@@ -34,6 +37,11 @@ router.put('/:enrollmentId/progress', updateProgressHandler)
 router.post('/:companyId/enroll', enrollHandler)
 router.get('/:companyId/enrollment/:studentId', getEnrollmentHandler)
 router.post('/enrollments/:enrollmentId/missions/:missionId/submissions', submitMissionHandler)
+router.post(
+  '/enrollments/:enrollmentId/missions/:missionId/upload',
+  upload.single('file'),
+  uploadMissionFileHandler,
+)
 router.get('/enrollments/:enrollmentId/submissions', listSubmissionsHandler)
 router.get('/:companyId/students', listEnrolledStudentsHandler)
 router.get('/:companyId/students/:studentId', getStudentDetailHandler)
