@@ -101,7 +101,12 @@ export default function MissionList() {
                 title={mission.title}
                 description={mission.description}
                 meta={SUBMISSION_TYPE_LABEL[mission.submissionType]}
-                badge={<Badge tone={mission.completed ? 'success' : 'neutral'}>{mission.completed ? '완료' : '미완료'}</Badge>}
+                badge={
+                  <>
+                    <Badge tone={mission.completed ? 'success' : 'neutral'}>{mission.completed ? '완료' : '미완료'}</Badge>
+                    {mission.feedback && <Badge tone="info">피드백 도착</Badge>}
+                  </>
+                }
                 onClick={() => navigate(`/student/onboarding/${companyId}/missions/${mission.id}`)}
               />
             ))}

@@ -22,6 +22,7 @@ export default function MissionDetail() {
 
   const [submissionForm, setSubmissionForm] = useState({ content: '', memo: '' })
   const [fileName, setFileName] = useState('')
+  const [selectedFile, setSelectedFile] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitFallback, setSubmitFallback] = useState(false)
@@ -91,6 +92,7 @@ export default function MissionDetail() {
 
   function handleFileChange(file) {
     setFileName(file.name)
+    setSelectedFile(file)
   }
 
   function validateSubmission() {
@@ -118,7 +120,12 @@ export default function MissionDetail() {
 
     if (!isMock && enrollmentId) {
       try {
-        await api.submitMission(enrollmentId, missionId, submissionForm.content || fileName || submissionForm.memo)
+        let content = submissionForm.content || submissionForm.memo
+        if (mission.submissionType === 'file' && selectedFile) {
+          const uploaded = await api.uploadMissionFile(enrollmentId, missionId, selectedFile)
+          content = uploaded.url
+        }
+        await api.submitMission(enrollmentId, missionId, content)
         setIsSubmitting(false)
         setSubmitted(true)
         return
@@ -134,6 +141,8 @@ export default function MissionDetail() {
     }, 600)
   }
 
+  const isDone = !isMock && (mission.completed || submitted)
+
   return (
     <>
       <Nav />
@@ -148,61 +157,87 @@ export default function MissionDetail() {
           <h1 className={styles.title}>{mission.title}</h1>
           <p className={styles.description}>{mission.description}</p>
 
-          <form className={styles.form} onSubmit={handleSubmit}>
-            {mission.submissionType === 'text' && (
+          {isDone ? (
+            <div className={styles.submittedSection}>
+              <div className={styles.submittedBox}>
+                <p className={styles.submittedLabel}>제출한 내용</p>
+                {mission.submissionType === 'file' && mission.submittedContent ? (
+                  <a
+                    href={mission.submittedContent}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={styles.submittedFileLink}
+                  >
+                    제출한 파일 보기
+                  </a>
+                ) : (
+                  <p className={styles.submittedContent}>{mission.submittedContent || '-'}</p>
+                )}
+              </div>
+
+              {mission.feedback ? (
+                <div className={styles.feedbackBox}>
+                  <p className={styles.feedbackLabel}>회사 피드백</p>
+                  <p className={styles.feedbackText}>{mission.feedback}</p>
+                </div>
+              ) : (
+                <Banner variant="success">제출이 완료됐어요. 회사의 피드백을 기다려주세요.</Banner>
+              )}
+
+              {submitted && submitFallback && (
+                <Banner variant="warning">서버 저장에 실패해서 화면에서만 표시 중이에요.</Banner>
+              )}
+            </div>
+          ) : (
+            <form className={styles.form} onSubmit={handleSubmit}>
+              {mission.submissionType === 'text' && (
+                <Input
+                  multiline
+                  rows={6}
+                  label="제출 내용"
+                  placeholder="내용을 작성해주세요"
+                  value={submissionForm.content}
+                  onChange={(e) => setSubmissionForm((prev) => ({ ...prev, content: e.target.value }))}
+                />
+              )}
+
+              {mission.submissionType === 'choice' && (
+                <div className={styles.choiceList}>
+                  {(mission.options ?? []).map((option) => (
+                    <Radio
+                      key={option}
+                      id={`choice-${option}`}
+                      name="mission-choice"
+                      value={option}
+                      checked={submissionForm.content === option}
+                      onChange={(e) => setSubmissionForm((prev) => ({ ...prev, content: e.target.value }))}
+                    >
+                      {option}
+                    </Radio>
+                  ))}
+                </div>
+              )}
+
+              {mission.submissionType === 'file' && <Dropzone fileName={fileName} onChange={handleFileChange} />}
+
               <Input
                 multiline
-                rows={6}
-                label="제출 내용"
-                placeholder="내용을 작성해주세요"
-                value={submissionForm.content}
-                onChange={(e) => setSubmissionForm((prev) => ({ ...prev, content: e.target.value }))}
+                rows={3}
+                label="메모 (선택)"
+                placeholder="메모를 남겨보세요"
+                value={submissionForm.memo}
+                onChange={(e) => setSubmissionForm((prev) => ({ ...prev, memo: e.target.value }))}
               />
-            )}
 
-            {mission.submissionType === 'choice' && (
-              <div className={styles.choiceList}>
-                {(mission.options ?? []).map((option) => (
-                  <Radio
-                    key={option}
-                    id={`choice-${option}`}
-                    name="mission-choice"
-                    value={option}
-                    checked={submissionForm.content === option}
-                    onChange={(e) => setSubmissionForm((prev) => ({ ...prev, content: e.target.value }))}
-                  >
-                    {option}
-                  </Radio>
-                ))}
-              </div>
-            )}
+              {validationError && <p className={styles.validationError}>{validationError}</p>}
 
-            {mission.submissionType === 'file' && <Dropzone fileName={fileName} onChange={handleFileChange} />}
+              <Button type="submit" variant="primary" disabled={isSubmitting}>
+                {isSubmitting ? '제출 중...' : '제출하기'}
+              </Button>
 
-            <Input
-              multiline
-              rows={3}
-              label="메모 (선택)"
-              placeholder="메모를 남겨보세요"
-              value={submissionForm.memo}
-              onChange={(e) => setSubmissionForm((prev) => ({ ...prev, memo: e.target.value }))}
-            />
-
-            {validationError && <p className={styles.validationError}>{validationError}</p>}
-
-            <Button type="submit" variant="primary" disabled={isSubmitting || submitted}>
-              {submitted ? '제출 완료' : isSubmitting ? '제출 중...' : '제출하기'}
-            </Button>
-
-            <p className={styles.notice}>제출 후 회사가 검토합니다</p>
-
-            {submitted && submitFallback && (
-              <Banner variant="warning">서버 저장에 실패해서 화면에서만 표시 중이에요.</Banner>
-            )}
-            {submitted && !submitFallback && (
-              <Banner variant="success">제출이 완료됐어요. 검토 결과를 기다려주세요.</Banner>
-            )}
-          </form>
+              <p className={styles.notice}>제출 후 회사가 검토합니다</p>
+            </form>
+          )}
         </div>
       </div>
     </>

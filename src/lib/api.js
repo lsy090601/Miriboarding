@@ -108,6 +108,24 @@ export function getEnrollment(companyId, studentId) {
   return apiFetch(`/api/onboarding/${companyId}/enrollment/${studentId}`)
 }
 
+export async function uploadMissionFile(enrollmentId, missionId, file) {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const res = await fetch(`${API_BASE_URL}/api/onboarding/enrollments/${enrollmentId}/missions/${missionId}/upload`, {
+    method: 'POST',
+    body: formData,
+  })
+
+  const data = await res.json().catch(() => null)
+
+  if (!res.ok) {
+    throw new ApiError(res.status, data?.code ?? 'UNKNOWN_ERROR', data?.message ?? '파일 업로드 중 오류가 발생했습니다.')
+  }
+
+  return data
+}
+
 export function submitMission(enrollmentId, missionId, content) {
   return apiFetch(`/api/onboarding/enrollments/${enrollmentId}/missions/${missionId}/submissions`, {
     method: 'POST',
@@ -176,7 +194,12 @@ function mapScheduleItems(items, period, companyId) {
 // 실제 API 응답(GET /api/onboarding/:companyId + submissions)을 src/mock/onboarding.js와
 // 동일한 모양으로 변환한다. 이렇게 하면 화면 컴포넌트는 mock/실제 데이터를 구분하지 않고 그릴 수 있다.
 export function normalizeOnboardingResponse(companyId, data, submissions) {
-  const completedMissionIds = new Set((submissions ?? []).map((submission) => submission.mission_id))
+  const submissionByMissionId = new Map()
+  for (const submission of submissions ?? []) {
+    if (!submissionByMissionId.has(submission.mission_id)) {
+      submissionByMissionId.set(submission.mission_id, submission)
+    }
+  }
 
   return {
     companyId,
@@ -188,14 +211,19 @@ export function normalizeOnboardingResponse(companyId, data, submissions) {
       week: mapScheduleItems(data.schedules?.week, 'week', companyId),
       month: mapScheduleItems(data.schedules?.month, 'month', companyId),
     },
-    missions: (data.missions ?? []).map((mission) => ({
-      id: mission.id,
-      title: mission.title,
-      description: mission.description,
-      submissionType: mission.submissionType ?? 'text',
-      options: mission.options,
-      completed: completedMissionIds.has(mission.id),
-    })),
+    missions: (data.missions ?? []).map((mission) => {
+      const submission = submissionByMissionId.get(mission.id)
+      return {
+        id: mission.id,
+        title: mission.title,
+        description: mission.description,
+        submissionType: mission.submissionType ?? 'text',
+        options: mission.options,
+        completed: Boolean(submission),
+        submittedContent: submission?.content ?? null,
+        feedback: submission?.feedback ?? null,
+      }
+    }),
   }
 }
 

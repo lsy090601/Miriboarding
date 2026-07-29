@@ -1,4 +1,5 @@
 import { OnboardingError } from '../utils/errors.js'
+import { uploadMissionFile } from '../services/upload.service.js'
 import {
   generateOnboarding,
   getOnboarding,
@@ -167,6 +168,19 @@ export async function registerStudentsHandler(req, res) {
     const { emails } = req.body
     const result = await registerStudentsByEmail(req.params.companyId, emails)
     return res.status(200).json(result)
+  } catch (error) {
+    return handleError(res, error)
+  }
+}
+
+export async function uploadMissionFileHandler(req, res) {
+  try {
+    const result = await uploadMissionFile({
+      enrollmentId: req.params.enrollmentId,
+      missionId: req.params.missionId,
+      file: req.file,
+    })
+    return res.status(201).json(result)
   } catch (error) {
     return handleError(res, error)
   }
