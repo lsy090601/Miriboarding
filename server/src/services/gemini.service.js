@@ -8,6 +8,36 @@ if (!GEMINI_API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
+const GENERATE_MAX_ATTEMPTS = 3
+const GENERATE_RETRY_BASE_DELAY_MS = 1_000
+
+function isTemporaryGeminiError(error) {
+  return error?.status === 500 || error?.status === 503
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function generateContentWithRetry(generativeModel, prompt) {
+  let lastError
+
+  for (let attempt = 1; attempt <= GENERATE_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      return await generativeModel.generateContent(prompt)
+    } catch (error) {
+      lastError = error
+      const shouldRetry = isTemporaryGeminiError(error) && attempt < GENERATE_MAX_ATTEMPTS
+      if (!shouldRetry) throw error
+
+      const delayMs = GENERATE_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1)
+      console.warn(`[gemini] 일시 오류(${error.status}), ${delayMs}ms 후 재시도 (${attempt}/${GENERATE_MAX_ATTEMPTS})`)
+      await wait(delayMs)
+    }
+  }
+
+  throw lastError
+}
 
 const scheduleItemSchema = {
   type: SchemaType.OBJECT,
@@ -59,7 +89,7 @@ const responseSchema = {
 }
 
 const model = genAI.getGenerativeModel({
-  model: GEMINI_MODEL || 'gemini-flash-latest',
+  model: GEMINI_MODEL || 'gemini-3.5-flash-lite',
   generationConfig: {
     responseMimeType: 'application/json',
     responseSchema,
@@ -93,7 +123,7 @@ function isValidPlan(parsed) {
 export async function generateOnboardingPlan({ jobTitle, companyName }) {
   let result
   try {
-    result = await model.generateContent(buildPrompt(jobTitle, companyName))
+    result = await generateContentWithRetry(model, buildPrompt(jobTitle, companyName))
   } catch (error) {
     console.error('[gemini] generateContent 실패:', error)
     throw new OnboardingError(502, 'GEMINI_ERROR', 'Gemini API 호출 중 오류가 발생했습니다.')
@@ -159,7 +189,7 @@ const jobScheduleResponseSchema = {
 }
 
 const jobScheduleModel = genAI.getGenerativeModel({
-  model: GEMINI_MODEL || 'gemini-flash-latest',
+  model: GEMINI_MODEL || 'gemini-3.5-flash-lite',
   generationConfig: {
     responseMimeType: 'application/json',
     responseSchema: jobScheduleResponseSchema,

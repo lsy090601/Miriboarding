@@ -16,7 +16,7 @@ npm run dev            # nodemon으로 실행 (http://localhost:4000)
 - `SUPABASE_URL`, `SUPABASE_ANON_KEY`: 일반 클라이언트용 키. 회원가입/로그인 시 Supabase Auth 호출에 사용.
 - `SUPABASE_SERVICE_ROLE_KEY`: 서버 전용 관리자 키. RLS를 우회해 `users`/`students`/`companies`/온보딩 관련 테이블에 직접 쓰기 위해 사용. **절대 프론트엔드에 노출하지 않는다.**
 - `GEMINI_API_KEY`: [Google AI Studio](https://aistudio.google.com/apikey)에서 발급받은 키. 온보딩 계획 생성(`/api/onboarding/generate`)에 사용.
-- `GEMINI_MODEL` (선택): Gemini 모델명. 기본값은 `gemini-flash-latest`. 키의 사용 가능 모델이 다르면 이 값을 바꿔서 지정한다.
+- `GEMINI_MODEL` (선택): Gemini 모델명. 기본값은 `gemini-3.5-flash-lite`. 키의 사용 가능 모델이 다르면 이 값을 바꿔서 지정한다.
 
 ## Supabase 스키마 적용
 

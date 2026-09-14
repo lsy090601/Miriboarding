@@ -32,8 +32,8 @@ function handleError(res, error) {
 
 export async function generateHandler(req, res) {
   try {
-    const { companyId, jobTitle, companyName } = req.body
-    const result = await generateOnboarding({ companyId, jobTitle, companyName })
+    const { companyId, jobTitle, companyName, targetDate } = req.body
+    const result = await generateOnboarding({ companyId, jobTitle, companyName, targetDate })
     return res.status(201).json(result)
   } catch (error) {
     return handleError(res, error)

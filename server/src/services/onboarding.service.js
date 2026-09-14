@@ -14,7 +14,6 @@ function checkGenerateRateLimit(companyId) {
     const waitSeconds = Math.ceil((GENERATE_COOLDOWN_MS - (now - lastAt)) / 1000)
     throw new OnboardingError(429, 'RATE_LIMITED', `잠시 후 다시 시도해주세요. (${waitSeconds}초 남음)`)
   }
-  lastGenerateAtByCompany.set(companyId, now)
 }
 
 function normalizeMissions(rawMissions) {
@@ -101,6 +100,9 @@ export async function generateOnboarding({ companyId, jobTitle, companyName, tar
     console.error('[onboarding] generateOnboarding - upsert 실패:', error)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '온보딩 정보 저장 중 오류가 발생했습니다.')
   }
+
+  // 실패한 Gemini/Supabase 요청은 사용자의 재시도를 막지 않는다.
+  lastGenerateAtByCompany.set(companyId, Date.now())
 
   return {
     schedules: data.schedules,
