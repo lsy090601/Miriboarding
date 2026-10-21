@@ -19,6 +19,13 @@
   color: var(--color-text);
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .statList {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

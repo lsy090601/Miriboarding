@@ -5,7 +5,7 @@ export const MOCK_STUDENT_ID = '46fb596d-af5d-49a0-9712-beca14a7622a'
 export const DEMO_COMPANY_ID = 'dc715ff2-b696-4f1f-a998-5940e715257d'
 
 export function getStoredAuth() {
-  const raw = localStorage.getItem(AUTH_STORAGE_KEY)
+  const raw = localStorage.getItem(AUTH_STORAGE_KEY) ?? sessionStorage.getItem(AUTH_STORAGE_KEY)
   if (!raw) return null
   try {
     return JSON.parse(raw)
@@ -14,12 +14,15 @@ export function getStoredAuth() {
   }
 }
 
-export function setStoredAuth(auth) {
-  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth))
+export function setStoredAuth(auth, keepLoggedIn = false) {
+  clearStoredAuth()
+  const storage = keepLoggedIn ? localStorage : sessionStorage
+  storage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth))
 }
 
 export function clearStoredAuth() {
   localStorage.removeItem(AUTH_STORAGE_KEY)
+  sessionStorage.removeItem(AUTH_STORAGE_KEY)
 }
 
 // 로그인된 계정이 학생일 때만 그 id를 쓰고, 아니면(회사 로그인/비로그인) 데모 학생 id로 폴백한다.

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as api from "../../lib/api.js";
-import { getCurrentCompanyId } from "../../lib/auth.js";
+import { clearStoredAuth, getCurrentCompanyId } from "../../lib/auth.js";
 import { dashboardMock } from "../../mock/company.js";
 import Banner from "../../components/Banner/Banner.jsx";
 import StatCard from "../../components/StatCard/StatCard.jsx";
 import ActionCard from "../../components/ActionCard/ActionCard.jsx";
+import Button from "../../components/Button/Button.jsx";
 import styles from "./CompanyDashboard.module.css";
 
 const QUICK_ACTIONS = [
@@ -78,10 +79,20 @@ export default function CompanyDashboard() {
 
   const { companyName, registeredStudents, missionCompletionRate, activeOnboardings } = dashboard;
 
+  function handleLogout() {
+    clearStoredAuth();
+    navigate("/login", { replace: true });
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.container}>
-        <h1 className={styles.title}>{companyName} 관리자 대시보드</h1>
+        <div className={styles.header}>
+          <h1 className={styles.title}>{companyName} 관리자 대시보드</h1>
+          <Button variant="outline" size="sm" onClick={handleLogout}>
+            로그아웃
+          </Button>
+        </div>
 
         {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
 

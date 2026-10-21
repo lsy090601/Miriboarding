@@ -1,3 +1,5 @@
+import { getStoredAuth } from './auth.js'
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
 
 export class ApiError extends Error {
@@ -9,9 +11,14 @@ export class ApiError extends Error {
 }
 
 async function apiFetch(path, options = {}) {
+  const token = getStoredAuth()?.accessToken
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
   })
 
   const data = await res.json().catch(() => null)
@@ -112,8 +119,10 @@ export async function uploadMissionFile(enrollmentId, missionId, file) {
   const formData = new FormData()
   formData.append('file', file)
 
+  const token = getStoredAuth()?.accessToken
   const res = await fetch(`${API_BASE_URL}/api/onboarding/enrollments/${enrollmentId}/missions/${missionId}/upload`, {
     method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   })
 

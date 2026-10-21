@@ -53,11 +53,14 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       const result = await api.login(form.email, form.password);
-      setStoredAuth({
-        userId: result.user_id,
-        userType: result.user_type,
-        accessToken: result.access_token,
-      });
+      setStoredAuth(
+        {
+          userId: result.user_id,
+          userType: result.user_type,
+          accessToken: result.access_token,
+        },
+        keepLoggedIn,
+      );
 
       if (result.user_type === "student") {
         navigate("/student/home");
