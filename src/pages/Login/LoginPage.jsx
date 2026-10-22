@@ -108,8 +108,7 @@ export default function LoginPage() {
     <>
       <p className={styles.brandLogo}>미리보딩</p>
       <div className={styles.brandHeadline}>
-        <p>취업 전에 미리 겪어보는</p>
-        <p>나의 첫 회사 생활</p>
+        <p>취업 전, 미리 겪어보는 나의 첫 회사 생활</p>
       </div>
       <p className={styles.brandSubcopy}>
         직무 체험부터 회사 맞춤 온보딩까지,
@@ -138,7 +137,7 @@ export default function LoginPage() {
           label="이메일"
           name="email"
           type="email"
-          placeholder="name@example.com"
+          placeholder="이메일"
           value={form.email}
           onChange={handleChange}
           error={errors.email}
@@ -149,7 +148,7 @@ export default function LoginPage() {
           label="비밀번호"
           name="password"
           type="password"
-          placeholder="8자 이상 입력해주세요"
+          placeholder="비밀번호"
           value={form.password}
           onChange={handleChange}
           error={errors.password}

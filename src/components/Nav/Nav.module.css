@@ -3,7 +3,7 @@
   align-items: center;
   justify-content: space-between;
   height: var(--nav-height);
-  padding: 0 80px;
+  padding: 0 100px;
   background: var(--color-white);
   border-bottom: 1px solid var(--color-border);
 }
@@ -13,7 +13,8 @@
   background: none;
   padding: 0;
   font-family: var(--font-logo);
-  font-size: 26px;
+  font-size: 30px;
+  font-weight: 800;
   color: var(--color-primary);
   cursor: pointer;
 }
@@ -21,7 +22,7 @@
 .links {
   display: flex;
   align-items: center;
-  gap: 36px;
+  gap: 44px;
   height: 100%;
 }
 
@@ -33,7 +34,7 @@
   border: none;
   background: none;
   padding: 0;
-  font-size: 15px;
+  font-size: 22px;
   font-weight: 500;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -44,18 +45,10 @@
   font-weight: 700;
 }
 
-.active::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  border-radius: 2px 2px 0 0;
-  background: var(--color-primary);
-}
+.active::after { display:none; }
 
 .profileIcon {
+  display:none;
   display: flex;
   align-items: center;
   justify-content: center;

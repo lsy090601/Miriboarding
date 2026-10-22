@@ -4,9 +4,9 @@
 }
 
 .container {
-  max-width: 640px;
+  max-width: 560px;
   margin: 0 auto;
-  padding: 40px 80px 80px;
+  padding: 100px 0;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -34,3 +34,5 @@
   border-radius: var(--radius-card);
   padding: 22px 24px;
 }
+
+.cardList{display:grid;grid-template-columns:repeat(2,270px);gap:20px}.cardList>button{height:270px;background-size:cover;background-position:center;border:0;justify-content:flex-end;position:relative;overflow:hidden}.cardList>button::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 25%,rgba(8,15,55,.86))}.cardList>button>*{position:relative;z-index:1}.cardList>button [class*='icon']{display:none}.cardList>button:nth-child(1){background-image:url('../../assets/figma/onboarding-2.jpeg')}.cardList>button:nth-child(2){background-image:url('../../assets/figma/onboarding-3.jpeg')}.cardList>button span{color:#fff}@media(max-width:620px){.container{padding-left:20px;padding-right:20px}.cardList{grid-template-columns:1fr}.cardList>button{height:230px}}

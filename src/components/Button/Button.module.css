@@ -4,7 +4,7 @@
   border-radius: var(--radius-field);
   border: 1px solid transparent;
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
   transition: opacity 0.15s ease, transform 0.05s ease;
 }
@@ -21,7 +21,7 @@
 .primary {
   background: var(--color-primary);
   color: var(--color-white);
-  box-shadow: 0 8px 20px rgba(26, 42, 128, 0.28);
+  box-shadow: none;
 }
 
 .outline {

@@ -21,6 +21,7 @@ import CompanyStudentRegister from "./pages/company/CompanyStudentRegister.jsx";
 import CompanyOnboardingList from "./pages/company/CompanyOnboardingList.jsx";
 import CompanyOnboardingSetup from "./pages/company/CompanyOnboardingSetup.jsx";
 import CompanyOnboardingEdit from "./pages/company/CompanyOnboardingEdit.jsx";
+import CompanyNav from "./components/CompanyNav/CompanyNav.jsx";
 
 function RequireRole({ role }) {
   const auth = getStoredAuth();
@@ -29,6 +30,10 @@ function RequireRole({ role }) {
     return <Navigate to={auth.userType === "company" ? "/company/home" : "/student/home"} replace />;
   }
   return <Outlet />;
+}
+
+function CompanyLayout() {
+  return <><CompanyNav /><Outlet /></>;
 }
 
 export default function App() {
@@ -53,13 +58,15 @@ export default function App() {
           <Route path="/student/onboarding/:companyId/missions/:missionId" element={<MissionDetail />} />
         </Route>
         <Route element={<RequireRole role="company" />}>
-          <Route path="/company/home" element={<CompanyDashboard />} />
-          <Route path="/company/students" element={<CompanyStudentList />} />
-          <Route path="/company/students/:studentId" element={<CompanyStudentDetail />} />
-          <Route path="/company/register-students" element={<CompanyStudentRegister />} />
-          <Route path="/company/onboarding-list" element={<CompanyOnboardingList />} />
-          <Route path="/company/onboarding-setup" element={<CompanyOnboardingSetup />} />
-          <Route path="/company/onboarding-edit/:companyId" element={<CompanyOnboardingEdit />} />
+          <Route element={<CompanyLayout />}>
+            <Route path="/company/home" element={<CompanyDashboard />} />
+            <Route path="/company/students" element={<CompanyStudentList />} />
+            <Route path="/company/students/:studentId" element={<CompanyStudentDetail />} />
+            <Route path="/company/register-students" element={<CompanyStudentRegister />} />
+            <Route path="/company/onboarding-list" element={<CompanyOnboardingList />} />
+            <Route path="/company/onboarding-setup" element={<CompanyOnboardingSetup />} />
+            <Route path="/company/onboarding-edit/:companyId" element={<CompanyOnboardingEdit />} />
+          </Route>
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

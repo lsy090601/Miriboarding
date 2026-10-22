@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { UserIcon } from '../icons/Icons.jsx'
 import Modal from '../Modal/Modal.jsx'
 import * as api from '../../lib/api.js'
 import { clearStoredAuth, getCurrentStudentId } from '../../lib/auth.js'
@@ -81,9 +80,6 @@ export default function Nav() {
         <button type="button" className={styles.link} onClick={handleLogout}>
           로그아웃
         </button>
-        <span className={styles.profileIcon}>
-          <UserIcon />
-        </span>
       </nav>
 
       {showNotEnrolledModal && (
