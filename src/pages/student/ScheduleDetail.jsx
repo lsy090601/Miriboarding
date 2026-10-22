@@ -2,12 +2,10 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import * as api from '../../lib/api.js'
 import { getJobById, getScheduleById, IMPORTANCE_LABEL, JOB_SLUG_META } from '../../mock/jobs.js'
-import Modal from '../../components/Modal/Modal.jsx'
 import Banner from '../../components/Banner/Banner.jsx'
 import Nav from '../../components/Nav/Nav.jsx'
-import Button from '../../components/Button/Button.jsx'
+import BackLink from '../../components/BackLink/BackLink.jsx'
 import Badge from '../../components/Badge/Badge.jsx'
-import Chip from '../../components/Chip/Chip.jsx'
 import styles from './ScheduleDetail.module.css'
 
 const IMPORTANCE_TONE = { high: 'error', medium: 'warning', low: 'info' }
@@ -15,7 +13,7 @@ const IMPORTANCE_TONE = { high: 'error', medium: 'warning', low: 'info' }
 export default function ScheduleDetail() {
   const { jobId, scheduleId } = useParams()
   const navigate = useNavigate()
-  const [activeTerm, setActiveTerm] = useState(null)
+  const [activeTermName, setActiveTermName] = useState(null)
 
   const [job, setJob] = useState(null)
   const [isMock, setIsMock] = useState(false)
@@ -56,18 +54,11 @@ export default function ScheduleDetail() {
     }
   }, [jobId])
 
-  if (isLoading) {
-    return (
-      <>
-        <Nav />
-        <div className={styles.page}>
-          <div className={styles.container}>불러오는 중...</div>
-        </div>
-      </>
-    )
-  }
-
-  const schedule = isMock ? getScheduleById(jobId, scheduleId) : job?.schedules.find((s) => s.id === scheduleId)
+  const schedule = isLoading
+    ? null
+    : isMock
+      ? getScheduleById(jobId, scheduleId)
+      : job?.schedules.find((s) => s.id === scheduleId)
 
   if (!job || !schedule) {
     return (
@@ -75,49 +66,60 @@ export default function ScheduleDetail() {
         <Nav />
         <div className={styles.page}>
           <div className={styles.container}>
-            <Button variant="outline" size="sm" onClick={() => navigate('/student/explore')}>
-              ← 직무 선택으로 돌아가기
-            </Button>
-            <p>존재하지 않는 일정이에요.</p>
+            <BackLink onClick={() => navigate(job ? `/student/explore/${job.id}` : '/student/explore')} />
+            <p className={styles.message}>{isLoading ? '불러오는 중...' : '존재하지 않는 일정이에요.'}</p>
           </div>
         </div>
       </>
     )
   }
 
+  const terms = schedule.terms ?? []
+  const activeTerm = terms.find((term) => term.term === activeTermName) ?? terms[0]
+
   return (
     <>
       <Nav />
       <div className={styles.page}>
         <div className={styles.container}>
-          <Button variant="outline" size="sm" onClick={() => navigate(`/student/explore/${job.id}`)}>
-            ← 직무 일정으로 돌아가기
-          </Button>
-
-          {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
-
           <div className={styles.header}>
-            <h1 className={styles.title}>{schedule.title}</h1>
-            <Badge tone={IMPORTANCE_TONE[schedule.importance]}>{IMPORTANCE_LABEL[schedule.importance]}</Badge>
+            <h1 className={styles.titleBox}>{schedule.title}</h1>
+            <div className={styles.headerRow}>
+              <BackLink onClick={() => navigate(`/student/explore/${job.id}`)} />
+              <Badge size="lg" tone={IMPORTANCE_TONE[schedule.importance]}>
+                {IMPORTANCE_LABEL[schedule.importance]}
+              </Badge>
+            </div>
+            {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
+            {schedule.description && <p className={styles.description}>{schedule.description}</p>}
           </div>
 
-          <p className={styles.description}>{schedule.description}</p>
-
-          <h2 className={styles.termsTitle}>관련 용어</h2>
-          <div className={styles.termList}>
-            {(schedule.terms ?? []).map((term) => (
-              <Chip key={term.term} onClick={() => setActiveTerm(term)}>
-                {term.term}
-              </Chip>
-            ))}
-          </div>
+          {terms.length > 0 && (
+            <section className={styles.terms}>
+              <h2 className={styles.termsTitle}>관련용어</h2>
+              <div className={styles.termGroup}>
+                <div className={styles.termList} role="tablist">
+                  {terms.map((term) => {
+                    const selected = term.term === activeTerm.term
+                    return (
+                      <button
+                        key={term.term}
+                        type="button"
+                        role="tab"
+                        aria-selected={selected}
+                        className={`${styles.term} ${selected ? styles.termActive : ''}`}
+                        onClick={() => setActiveTermName(term.term)}
+                      >
+                        {term.term}
+                      </button>
+                    )
+                  })}
+                </div>
+                <p className={styles.termDescription}>{activeTerm.description}</p>
+              </div>
+            </section>
+          )}
         </div>
-
-        {activeTerm && (
-          <Modal title={activeTerm.term} onClose={() => setActiveTerm(null)}>
-            <p>{activeTerm.description}</p>
-          </Modal>
-        )}
       </div>
     </>
   )

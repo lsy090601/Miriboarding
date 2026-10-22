@@ -3,6 +3,7 @@
 
 :root {
   --color-primary: #19287a;
+  --color-line: #aeaeae;
   --color-primary-glow: #4192ff;
   --color-error: #d64545;
   --color-white: #ffffff;
@@ -31,6 +32,7 @@
 
   --font-body: 'SF Pro Display', 'SF Pro Text', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-logo: 'HiKR', 'Pretendard', sans-serif;
+  --font-display: 'HiKR', 'Pretendard', sans-serif;
 }
 
 * {

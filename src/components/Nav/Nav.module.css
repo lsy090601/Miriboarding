@@ -5,16 +5,17 @@
   height: var(--nav-height);
   padding: 0 100px;
   background: var(--color-white);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-line);
 }
 
 .logo {
   border: none;
   background: none;
   padding: 0;
-  font-family: var(--font-logo);
+  font-family: var(--font-display);
   font-size: 30px;
   font-weight: 800;
+  line-height: 1;
   color: var(--color-primary);
   cursor: pointer;
 }
@@ -22,41 +23,47 @@
 .links {
   display: flex;
   align-items: center;
-  gap: 44px;
+  gap: 40px;
   height: 100%;
 }
 
 .link {
-  position: relative;
-  height: 100%;
   display: flex;
   align-items: center;
   border: none;
   background: none;
   padding: 0;
   font-size: 22px;
-  font-weight: 500;
-  color: var(--color-text-muted);
+  font-weight: 400;
+  color: var(--color-line);
   cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.link:hover {
+  color: var(--color-primary);
 }
 
 .active {
   color: var(--color-primary);
-  font-weight: 700;
+  font-weight: 500;
 }
 
-.active::after { display:none; }
+@media (max-width: 720px) {
+  .nav {
+    padding: 0 20px;
+  }
 
-.profileIcon {
-  display:none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  padding: 7px;
-  border: 1.5px solid var(--color-border);
-  border-radius: 50%;
-  color: var(--color-primary);
-  box-sizing: border-box;
+  .logo {
+    font-size: 22px;
+  }
+
+  .links {
+    gap: 16px;
+  }
+
+  .link {
+    font-size: 15px;
+  }
 }

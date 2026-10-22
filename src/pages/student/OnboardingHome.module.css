@@ -1,38 +1,84 @@
 .page {
-  min-height: 100vh;
-  background: var(--color-bg-app);
+  min-height: calc(100vh - var(--nav-height));
+  background: var(--color-white);
 }
 
 .container {
-  max-width: 560px;
+  max-width: 600px;
   margin: 0 auto;
-  padding: 100px 0;
+  padding: 100px 20px 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.top {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.headerText {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 20px;
+  gap: 10px;
 }
 
 .subtitle {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
+  color: var(--color-line);
+}
+
+.dDay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  padding: 10px 20px;
+  background: var(--color-primary);
+  border-radius: 15px;
+  color: var(--color-white);
+  text-align: center;
+}
+
+.dDayValue {
+  font-size: 40px;
   font-weight: 600;
-  color: var(--color-text-muted);
+  line-height: 48px;
+  white-space: nowrap;
+}
+
+.dDayMeta {
+  font-size: 20px;
+  font-weight: 500;
 }
 
 .cardList {
-  width: 100%;
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
-.progressSection {
-  width: 100%;
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  padding: 22px 24px;
+.message {
+  margin: 0;
+  color: var(--color-text-muted);
 }
 
-.cardList{display:grid;grid-template-columns:repeat(2,270px);gap:20px}.cardList>button{height:270px;background-size:cover;background-position:center;border:0;justify-content:flex-end;position:relative;overflow:hidden}.cardList>button::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 25%,rgba(8,15,55,.86))}.cardList>button>*{position:relative;z-index:1}.cardList>button [class*='icon']{display:none}.cardList>button:nth-child(1){background-image:url('../../assets/figma/onboarding-2.jpeg')}.cardList>button:nth-child(2){background-image:url('../../assets/figma/onboarding-3.jpeg')}.cardList>button span{color:#fff}@media(max-width:620px){.container{padding-left:20px;padding-right:20px}.cardList{grid-template-columns:1fr}.cardList>button{height:230px}}
+@media (max-width: 600px) {
+  .cardList {
+    flex-direction: column;
+  }
+
+  .dDay {
+    gap: 16px;
+  }
+
+  .dDayValue {
+    font-size: 30px;
+  }
+
+  .dDayMeta {
+    font-size: 15px;
+  }
+}

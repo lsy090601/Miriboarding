@@ -5,8 +5,7 @@ import { getCurrentStudentId } from '../../lib/auth.js'
 import { getOnboardingByCompanyId, getMissionProgress, SUBMISSION_TYPE_LABEL } from '../../mock/onboarding.js'
 import Banner from '../../components/Banner/Banner.jsx'
 import Nav from '../../components/Nav/Nav.jsx'
-import Button from '../../components/Button/Button.jsx'
-import ActionCard from '../../components/ActionCard/ActionCard.jsx'
+import BackLink from '../../components/BackLink/BackLink.jsx'
 import Badge from '../../components/Badge/Badge.jsx'
 import ProgressBar from '../../components/ProgressBar/ProgressBar.jsx'
 import styles from './MissionList.module.css'
@@ -47,27 +46,16 @@ export default function MissionList() {
     }
   }, [companyId])
 
-  if (isLoading) {
-    return (
-      <>
-        <Nav />
-        <div className={styles.page}>
-          <div className={styles.container}>불러오는 중...</div>
-        </div>
-      </>
-    )
-  }
+  const goBack = () => navigate(`/student/onboarding/${companyId}`)
 
-  if (!onboarding) {
+  if (isLoading || !onboarding) {
     return (
       <>
         <Nav />
         <div className={styles.page}>
           <div className={styles.container}>
-            <Button variant="outline" size="sm" onClick={() => navigate('/student/home')}>
-              ← 뒤로가기
-            </Button>
-            <p>존재하지 않는 온보딩이에요.</p>
+            <BackLink onClick={goBack} />
+            <p className={styles.message}>{isLoading ? '불러오는 중...' : '존재하지 않는 온보딩이에요.'}</p>
           </div>
         </div>
       </>
@@ -82,34 +70,44 @@ export default function MissionList() {
       <Nav />
       <div className={styles.page}>
         <div className={styles.container}>
-          <Button variant="outline" size="sm" onClick={() => navigate(`/student/onboarding/${companyId}`)}>
-            ← 뒤로가기
-          </Button>
-
-          {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
-
-          <h1 className={styles.title}>미션</h1>
-
-          <div className={styles.progressSection}>
-            <ProgressBar label="진행률" valueLabel={`${completed}/${total} 완료`} value={progressPercent} />
+          <div className={styles.header}>
+            <BackLink onClick={goBack} />
+            <h1 className={styles.title}>미션</h1>
           </div>
 
-          <div className={styles.missionList}>
-            {onboarding.missions.map((mission) => (
-              <ActionCard
-                key={mission.id}
-                title={mission.title}
-                description={mission.description}
-                meta={SUBMISSION_TYPE_LABEL[mission.submissionType]}
-                badge={
-                  <>
-                    <Badge tone={mission.completed ? 'success' : 'neutral'}>{mission.completed ? '완료' : '미완료'}</Badge>
-                    {mission.feedback && <Badge tone="info">피드백 도착</Badge>}
-                  </>
-                }
-                onClick={() => navigate(`/student/onboarding/${companyId}/missions/${mission.id}`)}
-              />
-            ))}
+          <div className={styles.body}>
+            {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
+
+            <ProgressBar variant="card" label="진행률" value={progressPercent} valueLabel={`${progressPercent}%`} />
+
+            <div className={styles.missionList}>
+              {onboarding.missions.map((mission) => (
+                <button
+                  key={mission.id}
+                  type="button"
+                  className={styles.mission}
+                  onClick={() => navigate(`/student/onboarding/${companyId}/missions/${mission.id}`)}
+                >
+                  <span className={styles.missionHeader}>
+                    <span className={styles.missionTitle}>{mission.title}</span>
+                    <span className={styles.badges}>
+                      {mission.feedback && (
+                        <Badge size="lg" tone="info">
+                          피드백 도착
+                        </Badge>
+                      )}
+                      <Badge size="lg" tone={mission.completed ? 'success' : 'neutral'}>
+                        {mission.completed ? '완료' : '미완료'}
+                      </Badge>
+                    </span>
+                  </span>
+                  <span className={styles.missionBody}>
+                    {mission.description && <span className={styles.missionDescription}>{mission.description}</span>}
+                    <span className={styles.missionMeta}>{SUBMISSION_TYPE_LABEL[mission.submissionType]}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

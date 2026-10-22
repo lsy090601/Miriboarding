@@ -4,8 +4,22 @@ import * as api from '../../lib/api.js'
 import { jobs as mockJobs, JOB_SLUG_META } from '../../mock/jobs.js'
 import Banner from '../../components/Banner/Banner.jsx'
 import Nav from '../../components/Nav/Nav.jsx'
-import ActionCard from '../../components/ActionCard/ActionCard.jsx'
+import PageHeading from '../../components/PageHeading/PageHeading.jsx'
+import ImageCard from '../../components/ImageCard/ImageCard.jsx'
+import imgBackend from '../../assets/figma/job-1.png'
+import imgFrontend from '../../assets/figma/job-2.png'
+import imgData from '../../assets/figma/job-3.jpeg'
+import imgLogistics from '../../assets/figma/job-6.jpeg'
+import imgFinance from '../../assets/figma/job-9.jpeg'
 import styles from './JobList.module.css'
+
+const JOB_IMAGES = {
+  backend: imgBackend,
+  frontend: imgFrontend,
+  logistics: imgLogistics,
+  data: imgData,
+  finance: imgFinance,
+}
 
 export default function JobList() {
   const navigate = useNavigate()
@@ -47,39 +61,32 @@ export default function JobList() {
     }
   }, [])
 
-  if (isLoading) {
-    return (
-      <>
-        <Nav />
-        <div className={styles.page}>
-          <div className={styles.container}>불러오는 중...</div>
-        </div>
-      </>
-    )
-  }
-
   return (
     <>
       <Nav />
       <div className={styles.page}>
         <div className={styles.container}>
-          <h1 className={styles.title}>직무 체험하기</h1>
-          <p className={styles.subtitle}>체험하고 싶은 직무를 선택해보세요</p>
+          <PageHeading title="직무체험" subtitle="체험하고 싶은 직무를 선택해보세요!" />
 
-          {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
-
-          <div className={styles.grid}>
-            {jobList.map((job) => (
-              <ActionCard
-                key={job.id}
-                icon={job.icon}
-                title={job.name}
-                description={job.tagline}
-                meta="체험하기"
-                onClick={() => navigate(`/student/explore/${job.id}`)}
-              />
-            ))}
-          </div>
+          {isLoading ? (
+            <p className={styles.loading}>불러오는 중...</p>
+          ) : (
+            <div className={styles.body}>
+              {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
+              <div className={styles.grid}>
+                {jobList.map((job) => (
+                  <ImageCard
+                    key={job.id}
+                    size="md"
+                    image={JOB_IMAGES[job.id]}
+                    title={job.name}
+                    description={job.tagline}
+                    onClick={() => navigate(`/student/explore/${job.id}`)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>

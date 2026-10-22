@@ -4,9 +4,9 @@ import * as api from '../../lib/api.js'
 import { getJobById, IMPORTANCE_LABEL, JOB_SLUG_META } from '../../mock/jobs.js'
 import Banner from '../../components/Banner/Banner.jsx'
 import Nav from '../../components/Nav/Nav.jsx'
-import Button from '../../components/Button/Button.jsx'
+import PageHeading from '../../components/PageHeading/PageHeading.jsx'
+import BackLink from '../../components/BackLink/BackLink.jsx'
 import Tabs from '../../components/Tabs/Tabs.jsx'
-import ActionCard from '../../components/ActionCard/ActionCard.jsx'
 import Badge from '../../components/Badge/Badge.jsx'
 import styles from './JobSchedule.module.css'
 
@@ -62,27 +62,18 @@ export default function JobSchedule() {
     }
   }, [jobId])
 
-  if (isLoading) {
-    return (
-      <>
-        <Nav />
-        <div className={styles.page}>
-          <div className={styles.container}>불러오는 중...</div>
-        </div>
-      </>
-    )
-  }
+  const backToList = () => navigate('/student/explore')
 
-  if (!job) {
+  if (isLoading || !job) {
     return (
       <>
         <Nav />
         <div className={styles.page}>
           <div className={styles.container}>
-            <Button variant="outline" size="sm" onClick={() => navigate('/student/explore')}>
-              ← 직무 선택으로 돌아가기
-            </Button>
-            <p>존재하지 않는 직무예요.</p>
+            <div className={styles.toolbar}>
+              <BackLink onClick={backToList} />
+            </div>
+            <p className={styles.message}>{isLoading ? '불러오는 중...' : '존재하지 않는 직무예요.'}</p>
           </div>
         </div>
       </>
@@ -96,30 +87,29 @@ export default function JobSchedule() {
       <Nav />
       <div className={styles.page}>
         <div className={styles.container}>
-          <Button variant="outline" size="sm" onClick={() => navigate('/student/explore')}>
-            ← 직무 선택으로 돌아가기
-          </Button>
+          <PageHeading title={job.name} subtitle="하루/주/달의 일정을 탭으로 전환하며 확인해보세요!" />
 
-          {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
-
-          <div className={styles.header}>
-            <span className={styles.icon}>{job.icon}</span>
-            <h1 className={styles.title}>{job.name}</h1>
+          <div className={styles.toolbar}>
+            <BackLink onClick={backToList} />
+            <Tabs variant="segmented" items={TABS} active={activeTab} onChange={setActiveTab} />
           </div>
-          <p className={styles.subtitle}>하루/주/달의 일정을 탭으로 전환하며 확인해보세요</p>
-
-          <Tabs items={TABS} active={activeTab} onChange={setActiveTab} />
 
           <div className={styles.scheduleList}>
+            {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
             {schedules.map((schedule) => (
-              <ActionCard
+              <button
                 key={schedule.id}
-                layout="row"
-                title={schedule.title}
-                badge={<Badge tone={IMPORTANCE_TONE[schedule.importance]}>{IMPORTANCE_LABEL[schedule.importance]}</Badge>}
+                type="button"
+                className={styles.scheduleItem}
                 onClick={() => navigate(`/student/explore/${job.id}/detail/${schedule.id}`)}
-              />
+              >
+                <span className={styles.scheduleTitle}>{schedule.title}</span>
+                <Badge size="lg" tone={IMPORTANCE_TONE[schedule.importance]}>
+                  {IMPORTANCE_LABEL[schedule.importance]}
+                </Badge>
+              </button>
             ))}
+            {schedules.length === 0 && <p className={styles.message}>등록된 일정이 없어요.</p>}
           </div>
         </div>
       </div>

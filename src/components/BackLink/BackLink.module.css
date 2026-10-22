@@ -1,0 +1,24 @@
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--color-primary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.icon {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+}
+
+.back:hover span:last-child {
+  text-decoration: underline;
+}

@@ -1,8 +1,12 @@
 import styles from './Tabs.module.css'
 
-export default function Tabs({ items, active, onChange }) {
+export default function Tabs({ items, active, onChange, variant = 'default' }) {
   return (
-    <div className={styles.row} role="tablist">
+    <div
+      className={`${styles.row} ${variant === 'segmented' ? styles.segmented : ''}`}
+      role="tablist"
+      style={variant === 'segmented' ? { '--tab-count': items.length } : undefined}
+    >
       {items.map((item) => (
         <button
           key={item.key}

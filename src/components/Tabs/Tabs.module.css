@@ -27,3 +27,31 @@
   color: var(--color-primary);
   box-shadow: 0 2px 8px rgba(26, 42, 128, 0.12);
 }
+
+/* Figma 하루/1주/1달 세그먼트 토글 */
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(var(--tab-count, 3), 1fr);
+  gap: 0;
+  padding: 0;
+  width: 300px;
+  height: 60px;
+  background: #f4f4f4;
+  border: 1px solid var(--color-line);
+  overflow: hidden;
+}
+
+.segmented .tab {
+  height: 100%;
+  padding: 0;
+  font-size: 20px;
+  font-weight: 400;
+  color: #898ea6;
+}
+
+.segmented .tab.active {
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-weight: 500;
+  box-shadow: none;
+}

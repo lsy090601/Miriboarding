@@ -67,3 +67,11 @@ export function CheckIcon(props) {
     </svg>
   )
 }
+
+export function ArrowLeftIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="100%" height="100%" {...props}>
+      <path d="M19.8 12H4.8M10.5 6 4.5 12l6 6" />
+    </svg>
+  )
+}

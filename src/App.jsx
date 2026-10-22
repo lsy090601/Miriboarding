@@ -23,8 +23,13 @@ import CompanyOnboardingSetup from "./pages/company/CompanyOnboardingSetup.jsx";
 import CompanyOnboardingEdit from "./pages/company/CompanyOnboardingEdit.jsx";
 import CompanyNav from "./components/CompanyNav/CompanyNav.jsx";
 
+// 개발 서버(npm run dev)에서만 학생 화면을 로그인 없이 볼 수 있게 한다. 배포 빌드에서는 적용되지 않는다.
+// 로그인하지 않으면 getCurrentStudentId()가 데모 학생 id로 폴백한다.
+const DEV_SKIP_STUDENT_AUTH = import.meta.env.DEV;
+
 function RequireRole({ role }) {
   const auth = getStoredAuth();
+  if (!auth && DEV_SKIP_STUDENT_AUTH && role === "student") return <Outlet />;
   if (!auth) return <Navigate to="/login" replace />;
   if (auth.userType !== role) {
     return <Navigate to={auth.userType === "company" ? "/company/home" : "/student/home"} replace />;

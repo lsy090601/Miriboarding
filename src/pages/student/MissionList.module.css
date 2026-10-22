@@ -1,36 +1,113 @@
 .page {
-  min-height: 100vh;
-  background: var(--color-bg-app);
+  min-height: calc(100vh - var(--nav-height));
+  background: var(--color-white);
 }
 
 .container {
-  max-width: 1140px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 100px 0;
+  padding: 100px 20px 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+}
+
+.header {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 30px;
+  gap: 10px;
 }
 
 .title {
-  margin: 4px 0 0;
+  margin: 0;
   font-size: 30px;
   font-weight: 700;
-  color: var(--color-text);
+  line-height: 36px;
+  color: #000;
 }
 
-.progressSection {
-  width: 100%;
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  padding: 21px 34px;
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
 }
 
 .missionList {
-  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.mission {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  width: 100%;
+  padding: 30px 80px 30px 40px;
+  background: var(--color-white);
+  border: 1px solid var(--color-line);
+  border-radius: 15px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mission:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 14px rgba(25, 40, 122, 0.08);
+}
+
+.missionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.missionTitle {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 29px;
+  color: var(--color-primary);
+}
+
+.badges {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.missionBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.missionDescription {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-line);
+}
+
+.missionMeta {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-primary);
+}
+
+.message {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 720px) {
+  .mission {
+    padding: 24px;
+  }
+
+  .missionTitle {
+    font-size: 19px;
+  }
 }

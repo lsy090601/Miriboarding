@@ -5,10 +5,11 @@ import { getCurrentStudentId } from '../../lib/auth.js'
 import { getOnboardingByCompanyId, getDDay, formatDate, getMissionProgress } from '../../mock/onboarding.js'
 import Banner from '../../components/Banner/Banner.jsx'
 import Nav from '../../components/Nav/Nav.jsx'
-import Button from '../../components/Button/Button.jsx'
-import ActionCard from '../../components/ActionCard/ActionCard.jsx'
-import StatCard from '../../components/StatCard/StatCard.jsx'
+import BackLink from '../../components/BackLink/BackLink.jsx'
+import ImageCard from '../../components/ImageCard/ImageCard.jsx'
 import ProgressBar from '../../components/ProgressBar/ProgressBar.jsx'
+import imgSchedule from '../../assets/figma/onboarding-2.jpeg'
+import imgMission from '../../assets/figma/onboarding-3.jpeg'
 import styles from './OnboardingHome.module.css'
 
 export default function OnboardingHome() {
@@ -49,34 +50,24 @@ export default function OnboardingHome() {
     }
   }, [companyId])
 
-  if (isLoading) {
-    return (
-      <>
-        <Nav />
-        <div className={styles.page}>
-          <div className={styles.container}>불러오는 중...</div>
-        </div>
-      </>
-    )
-  }
+  const goHome = () => navigate('/student/home')
 
-  if (!onboarding) {
+  if (isLoading || !onboarding) {
     return (
       <>
         <Nav />
         <div className={styles.page}>
           <div className={styles.container}>
-            <Button variant="outline" size="sm" onClick={() => navigate('/student/home')}>
-              ← 뒤로가기
-            </Button>
-            <p>존재하지 않는 온보딩이에요.</p>
+            <BackLink onClick={goHome} />
+            <p className={styles.message}>{isLoading ? '불러오는 중...' : '존재하지 않는 온보딩이에요.'}</p>
           </div>
         </div>
       </>
     )
   }
 
-  const dDay = getDDay(onboarding.targetDate)
+  const dDay = onboarding.targetDate ? getDDay(onboarding.targetDate) : null
+  const dDayLabel = dDay === null ? 'D- ?' : dDay >= 0 ? `D-${dDay}` : `D+${Math.abs(dDay)}`
   const missionProgress = getMissionProgress(onboarding.missions)
   const overallProgress = missionProgress.total
     ? Math.round((missionProgress.completed / missionProgress.total) * 100)
@@ -87,45 +78,44 @@ export default function OnboardingHome() {
       <Nav />
       <div className={styles.page}>
         <div className={styles.container}>
-          <Button variant="outline" size="sm" onClick={() => navigate('/student/home')}>
-            ← 뒤로가기
-          </Button>
+          <div className={styles.top}>
+            <div className={styles.headerText}>
+              <BackLink onClick={goHome} />
+              <p className={styles.subtitle}>
+                {onboarding.companyName} | {onboarding.jobTitle}
+              </p>
+            </div>
 
-          {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
+            {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
 
-          <p className={styles.subtitle}>
-            {onboarding.companyName} | {onboarding.jobTitle}
-          </p>
-
-          <StatCard
-            emphasis
-            label="D-day"
-            value={onboarding.targetDate ? (dDay >= 0 ? `D-${dDay}` : `D+${Math.abs(dDay)}`) : '일정 미정'}
-            meta={
-              onboarding.targetDate
-                ? `실습 시작일 ${formatDate(onboarding.targetDate)}`
-                : '실습 시작일이 아직 정해지지 않았어요'
-            }
-          />
+            <div className={styles.dDay}>
+              <span className={styles.dDayValue}>{dDayLabel}</span>
+              <span className={styles.dDayMeta}>
+                {onboarding.targetDate
+                  ? `실습 시작일 ${formatDate(onboarding.targetDate)}`
+                  : '실습 시작일이 아직 정해지지 않았어요'}
+              </span>
+            </div>
+          </div>
 
           <div className={styles.cardList}>
-            <ActionCard
-              icon="🧭"
-              title="직무 체험 (회사 커스텀)"
+            <ImageCard
+              size="square"
+              image={imgSchedule}
+              title="직무 체험"
               description={`${onboarding.companyName}에 맞춰진 일정을 확인해보세요`}
               onClick={() => navigate(`/student/onboarding/${companyId}/explore`)}
             />
-            <ActionCard
-              icon="📝"
+            <ImageCard
+              size="square"
+              image={imgMission}
               title="미션"
               description={`${missionProgress.completed}/${missionProgress.total} 완료`}
               onClick={() => navigate(`/student/onboarding/${companyId}/missions`)}
             />
           </div>
 
-          <div className={styles.progressSection}>
-            <ProgressBar label="전체 진도율" valueLabel={`${overallProgress}%`} value={overallProgress} />
-          </div>
+          <ProgressBar variant="card" label="전체 진도율" value={overallProgress} valueLabel={`${overallProgress}%`} />
         </div>
       </div>
     </>

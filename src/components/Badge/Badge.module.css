@@ -38,3 +38,31 @@
   background: rgba(214, 69, 69, 0.12);
   color: var(--color-error);
 }
+
+/* 학생 화면용 큰 배지 (Figma 중요도/미션 상태 배지) */
+.lg {
+  padding: 10px 16px;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 21px;
+}
+
+.lg.neutral {
+  background: #dddddd;
+  color: #414141;
+}
+
+.lg.warning {
+  background: #fff5e3;
+  color: #996224;
+}
+
+.lg.error {
+  background: #ffe3e3;
+  color: #ff4242;
+}
+
+.lg.info {
+  background: #f0f4ff;
+  color: var(--color-primary);
+}
