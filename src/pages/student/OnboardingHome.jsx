@@ -8,8 +8,8 @@ import Nav from '../../components/Nav/Nav.jsx'
 import BackLink from '../../components/BackLink/BackLink.jsx'
 import ImageCard from '../../components/ImageCard/ImageCard.jsx'
 import ProgressBar from '../../components/ProgressBar/ProgressBar.jsx'
-import imgSchedule from '../../assets/figma/onboarding-2.jpeg'
-import imgMission from '../../assets/figma/onboarding-3.jpeg'
+import imgSchedule from '../../assets/figma/onboarding-2.jpg'
+import imgMission from '../../assets/figma/onboarding-3.jpg'
 import styles from './OnboardingHome.module.css'
 
 export default function OnboardingHome() {

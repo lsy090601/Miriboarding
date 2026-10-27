@@ -1,4 +1,4 @@
-import { getStoredAuth } from './auth.js'
+import { getStoredAuth, clearStoredAuth } from './auth.js'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
 
@@ -24,6 +24,17 @@ async function apiFetch(path, options = {}) {
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
+    // 로그인 요청 자체의 실패(비밀번호 틀림 등)가 아니라, 로그인된 상태로 쓰던
+    // 중에 토큰이 만료/무효화된 경우(authenticate 미들웨어의 401 UNAUTHORIZED)엔
+    // 에러만 던지고 끝내지 않고 실제로 로그아웃 처리해서 로그인 화면으로 보낸다.
+    // 이게 없으면 토큰 만료 후에도 화면은 로그인된 것처럼 보이면서 요청마다
+    // 조용히 실패하기만 했다.
+    if (res.status === 401 && data?.code === 'UNAUTHORIZED' && path !== '/api/auth/login') {
+      clearStoredAuth()
+      if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login'
+      }
+    }
     throw new ApiError(res.status, data?.code ?? 'UNKNOWN_ERROR', data?.message ?? '요청 처리 중 오류가 발생했습니다.')
   }
 

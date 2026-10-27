@@ -1,6 +1,7 @@
 import { supabaseAuth, supabaseAdmin } from '../config/supabase.js'
 import { isValidEmail, isValidPassword, isValidBusinessNumber, isNonEmptyString, normalizeBusinessNumber } from '../utils/validation.js'
 import { lookupMockCompany } from '../utils/mockBusinessRegistry.js'
+import { lookupNpsCompany } from './nps.service.js'
 
 export class AuthError extends Error {
   constructor(status, code, message) {
@@ -48,12 +49,21 @@ async function rollbackSignup(userId) {
   await supabaseAdmin.auth.admin.deleteUser(userId).catch(() => {})
 }
 
-export function validateBusiness(businessNumber) {
+// NPS_SERVICE_KEY가 설정돼 있으면 국민연금공단 API로 실제 회사명/업종/등록일을
+// 가져오고, 없거나(키 미설정, 호출 실패, 한 회사로 못 좁힘) 필드가 비면 그 필드만 mock으로 채운다.
+// companyName은 선택값이다. 주면 검색이 한 회사로 좁혀질 가능성이 크게 올라간다.
+export async function validateBusiness(businessNumber, companyName) {
   if (!isValidBusinessNumber(businessNumber)) {
     return { valid: false }
   }
-  const company = lookupMockCompany(businessNumber)
-  return { valid: true, ...company }
+  const mock = lookupMockCompany(businessNumber)
+  const nps = await lookupNpsCompany(businessNumber, companyName)
+  return {
+    valid: true,
+    company_name: nps?.company_name || mock.company_name,
+    industry: nps?.industry || mock.industry,
+    founded_date: nps?.founded_date || mock.founded_date,
+  }
 }
 
 export async function signupStudent({ email, password, name, school, age }) {
