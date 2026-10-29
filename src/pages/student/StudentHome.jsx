@@ -6,8 +6,8 @@ import PageHeading from '../../components/PageHeading/PageHeading.jsx'
 import ImageCard from '../../components/ImageCard/ImageCard.jsx'
 import * as api from '../../lib/api.js'
 import { getCurrentStudentId } from '../../lib/auth.js'
-import imgHomeJob from '../../assets/figma/student-home-1.png'
-import imgHomeOnboarding from '../../assets/figma/student-home-2.png'
+import imgHomeJob from '../../assets/figma/student-home-1.jpg'
+import imgHomeOnboarding from '../../assets/figma/student-home-2.jpg'
 import styles from './StudentHome.module.css'
 
 export default function StudentHome() {

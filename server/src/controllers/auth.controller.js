@@ -9,12 +9,12 @@ function handleError(res, error) {
   return res.status(500).json({ success: false, code: 'INTERNAL_ERROR', message: '서버 오류가 발생했습니다.' })
 }
 
-export function validateBusinessHandler(req, res) {
-  const { businessNumber } = req.body
+export async function validateBusinessHandler(req, res) {
+  const { businessNumber, companyName } = req.body
   if (!isNonEmptyString(businessNumber)) {
     return res.status(400).json({ valid: false, message: '사업자등록번호를 입력해주세요.' })
   }
-  return res.status(200).json(validateBusiness(businessNumber))
+  return res.status(200).json(await validateBusiness(businessNumber, companyName))
 }
 
 export async function signupStudentHandler(req, res) {
