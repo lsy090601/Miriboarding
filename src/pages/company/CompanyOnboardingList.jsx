@@ -10,7 +10,8 @@ import styles from "./CompanyOnboardingList.module.css";
 export default function CompanyOnboardingList() {
   const navigate = useNavigate();
   const companyId = getCurrentCompanyId();
-  const [onboarding, setOnboarding] = useState(null);
+  const [versions, setVersions] = useState([]);
+  const [loadError, setLoadError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -18,16 +19,12 @@ export default function CompanyOnboardingList() {
 
     async function load() {
       try {
-        const [data, { students }] = await Promise.all([
-          api.getOnboarding(companyId),
-          api.listEnrolledStudents(companyId),
-        ]);
+        const { versions } = await api.listOnboardingVersions(companyId);
         if (cancelled) return;
-        setOnboarding({ jobTitle: data.jobTitle, enrolledCount: students.length });
+        setVersions(versions);
       } catch (error) {
-        if (error.code !== "NOT_FOUND") console.error("온보딩 목록 조회 실패:", error);
         if (cancelled) return;
-        setOnboarding(null);
+        setLoadError(error.message || "온보딩 목록을 불러오지 못했습니다.");
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -56,15 +53,18 @@ export default function CompanyOnboardingList() {
         <div className={styles.cardList}>
           {isLoading ? (
             <p>불러오는 중...</p>
-          ) : !onboarding ? (
+          ) : loadError ? (
+            <p role="alert">{loadError}</p>
+          ) : !versions.length ? (
             <p className={styles.emptyText}>아직 생성된 온보딩이 없어요.</p>
           ) : (
-            <ActionCard
-              title={onboarding.jobTitle}
-              badge={<Badge tone="success">진행 중</Badge>}
-              meta={`등록 학생 ${onboarding.enrolledCount}명`}
-              onClick={() => navigate(`/company/onboarding-edit/${companyId}`)}
-            />
+            versions.map((version) => <ActionCard
+              key={version.id}
+              title={version.job_title}
+              badge={<Badge tone={version.status === "draft" ? "warning" : "success"}>{version.status === "draft" ? "초안" : "배포됨"}</Badge>}
+              meta={`생성 ${new Date(version.created_at).toLocaleString('ko-KR')}`}
+              onClick={() => navigate(`/company/onboarding-edit/${companyId}?versionId=${version.id}`)}
+            />)
           )}
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { OnboardingError } from '../utils/errors.js'
 import { uploadMissionFile } from '../services/upload.service.js'
+import { listVersions, publishVersion } from '../services/onboardingVersions.service.js'
 import {
   generateOnboarding,
   getOnboarding,
@@ -32,8 +33,8 @@ function handleError(res, error) {
 
 export async function generateHandler(req, res) {
   try {
-    const { companyId, jobTitle, companyName, targetDate } = req.body
-    const result = await generateOnboarding({ companyId, jobTitle, companyName, targetDate })
+    const { companyId, jobTitle, industry, companyDescription, jobDescription, targetDate } = req.body
+    const result = await generateOnboarding({ companyId, jobTitle, industry, companyDescription, jobDescription, targetDate })
     return res.status(201).json(result)
   } catch (error) {
     return handleError(res, error)
@@ -42,7 +43,14 @@ export async function generateHandler(req, res) {
 
 export async function getOnboardingHandler(req, res) {
   try {
-    const result = await getOnboarding(req.params.companyId)
+    const isStudent = req.auth.userType === 'student'
+    if (!isStudent && req.auth.userId !== req.params.companyId) {
+      return res.status(403).json({ code: 'FORBIDDEN', message: '접근 권한이 없습니다.' })
+    }
+    const result = await getOnboarding(req.params.companyId, {
+      studentId: isStudent ? req.auth.userId : undefined,
+      versionId: isStudent ? undefined : req.query.versionId,
+    })
     return res.status(200).json(result)
   } catch (error) {
     return handleError(res, error)
@@ -51,18 +59,33 @@ export async function getOnboardingHandler(req, res) {
 
 export async function updateOnboardingHandler(req, res) {
   try {
-    const { schedules, missions, targetDate } = req.body
-    const result = await updateOnboarding(req.params.companyId, { schedules, missions, targetDate })
+    const { schedules, missions, targetDate, versionId } = req.body
+    const result = await updateOnboarding(req.params.companyId, { schedules, missions, targetDate, versionId })
     return res.status(200).json(result)
   } catch (error) {
     return handleError(res, error)
   }
 }
 
+export async function listVersionsHandler(req, res) {
+  try { return res.json({ versions: await listVersions(req.params.companyId) }) }
+  catch (error) { return handleError(res, error) }
+}
+
+export async function publishVersionHandler(req, res) {
+  try { return res.json(await publishVersion(req.params.companyId, req.params.versionId)) }
+  catch (error) { return handleError(res, error) }
+}
+
 export async function listMissionsHandler(req, res) {
   try {
-    const missions = await listMissions(req.params.companyId)
-    return res.status(200).json({ missions })
+    if (req.auth.userType === 'company' && req.auth.userId !== req.params.companyId) {
+      return res.status(403).json({ code: 'FORBIDDEN', message: '접근 권한이 없습니다.' })
+    }
+    const row = await getOnboarding(req.params.companyId, {
+      studentId: req.auth.userType === 'student' ? req.auth.userId : undefined,
+    })
+    return res.status(200).json({ missions: row.missions })
   } catch (error) {
     return handleError(res, error)
   }

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import * as api from "../../lib/api.js";
-import { getOnboardingDetail } from "../../mock/company.js";
 import Banner from "../../components/Banner/Banner.jsx";
 import Button from "../../components/Button/Button.jsx";
 import Input from "../../components/Input/Input.jsx";
@@ -48,9 +47,11 @@ function toApiScheduleItems(items, period) {
 export default function CompanyOnboardingEdit() {
   const navigate = useNavigate();
   const { companyId } = useParams();
+  const [searchParams] = useSearchParams();
+  const versionId = searchParams.get("versionId");
+  const [loadError, setLoadError] = useState("");
 
   const [detail, setDetail] = useState(null);
-  const [isMock, setIsMock] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -60,27 +61,23 @@ export default function CompanyOnboardingEdit() {
 
   useEffect(() => {
     let cancelled = false;
+    setIsLoading(true);
+    setLoadError("");
 
     async function load() {
       try {
-        const data = await api.getOnboarding(companyId);
+        const data = await api.getOnboarding(companyId, versionId);
         if (cancelled) return;
-        setDetail({ companyName: data.companyName, jobTitle: data.jobTitle });
+        setDetail({ companyName: data.companyName, jobTitle: data.jobTitle, status: data.status });
         setSchedules({
           day: toEditableSchedule(data.schedules?.day, "day"),
           week: toEditableSchedule(data.schedules?.week, "week"),
           month: toEditableSchedule(data.schedules?.month, "month"),
         });
         setMissions(data.missions ?? []);
-        setIsMock(false);
       } catch (error) {
-        console.error("온보딩 상세 API 연동 실패, mock으로 폴백합니다:", error);
         if (cancelled) return;
-        const mockDetail = getOnboardingDetail(companyId);
-        setDetail(mockDetail);
-        setSchedules(mockDetail?.schedules ?? EMPTY_SCHEDULES);
-        setMissions(mockDetail?.missions ?? []);
-        setIsMock(true);
+        setLoadError(error.message || "온보딩을 불러오지 못했습니다.");
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -90,7 +87,7 @@ export default function CompanyOnboardingEdit() {
     return () => {
       cancelled = true;
     };
-  }, [companyId]);
+  }, [companyId, versionId]);
 
   function updateScheduleField(period, id, field, value) {
     setSchedules((prev) => ({
@@ -138,16 +135,13 @@ export default function CompanyOnboardingEdit() {
     setMissions((prev) => prev.filter((mission) => mission.id !== id));
   }
 
-  async function handleSave() {
-    if (isMock) {
-      alert("저장되었습니다. (mock)");
-      navigate("/company/onboarding-list");
-      return;
-    }
+  async function handleSave(publish = false) {
+    if (isSaving || detail?.status !== "draft") return;
 
     setIsSaving(true);
     try {
       await api.updateOnboarding(companyId, {
+        versionId,
         schedules: {
           day: toApiScheduleItems(schedules.day, "day"),
           week: toApiScheduleItems(schedules.week, "week"),
@@ -155,6 +149,7 @@ export default function CompanyOnboardingEdit() {
         },
         missions,
       });
+      if (publish) await api.publishOnboardingVersion(companyId, versionId);
       navigate("/company/onboarding-list");
     } catch (error) {
       alert(error.message ?? "저장 중 오류가 발생했습니다.");
@@ -174,7 +169,7 @@ export default function CompanyOnboardingEdit() {
   if (!detail) {
     return (
       <div className={styles.page}>
-        <p>온보딩 정보를 찾을 수 없어요. (임시 데이터라 등록된 companyId만 조회돼요)</p>
+        <p role="alert">{loadError || "온보딩 정보를 찾을 수 없어요."}</p>
         <Button variant="outline" size="sm" onClick={() => navigate("/company/onboarding-list")}>
           목록으로
         </Button>
@@ -192,9 +187,12 @@ export default function CompanyOnboardingEdit() {
           {detail.companyName} · {detail.jobTitle} 온보딩 수정
         </h1>
 
-        {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
+        <Banner variant="info">{detail.status === "draft"
+          ? "초안입니다. 검토 후 배포하면 이후 등록하는 학생에게 배정됩니다. 기존 학생의 계획과 제출 내역은 유지됩니다."
+          : "배포된 온보딩입니다. 내용을 변경하려면 새 초안을 생성해주세요."}</Banner>
 
         <Tabs items={TABS} active={activeTab} onChange={setActiveTab} />
+        <fieldset disabled={isSaving || detail.status !== "draft"} style={{ border: 0, padding: 0, margin: 0, minWidth: 0, width: '100%' }}>
 
         {activeTab !== "mission" && (
           <div className={styles.scheduleSection}>
@@ -273,6 +271,13 @@ export default function CompanyOnboardingEdit() {
                     삭제
                   </Button>
                 </div>
+                {mission.submissionType === "choice" && <Input
+                  multiline
+                  rows={4}
+                  label="선택지 (한 줄에 하나)"
+                  value={(mission.options ?? []).join('\n')}
+                  onChange={(e) => updateMissionField(mission.id, "options", e.target.value.split('\n'))}
+                />}
               </div>
             ))}
             <Button variant="outline" size="sm" onClick={addMission}>
@@ -281,13 +286,19 @@ export default function CompanyOnboardingEdit() {
           </div>
         )}
 
+        </fieldset>
         <div className={styles.footerButtons}>
           <Button variant="outline" onClick={() => navigate("/company/onboarding-list")}>
             취소
           </Button>
-          <Button variant="primary" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? "저장 중..." : "저장하기"}
-          </Button>
+          {detail.status === "draft" && <>
+            <Button variant="outline" onClick={() => handleSave()} disabled={isSaving}>
+              {isSaving ? "처리 중..." : "초안 저장"}
+            </Button>
+            <Button variant="primary" onClick={() => handleSave(true)} disabled={isSaving}>
+              {isSaving ? "처리 중..." : "저장 후 배포"}
+            </Button>
+          </>}
         </div>
       </div>
     </div>

@@ -30,7 +30,7 @@ export default function CompanyStudentList() {
             name: student.name,
             progress: student.progress,
             missions: `${student.completedCount}/${student.totalMissions}`,
-            lastAccess: formatDate(student.lastAccess),
+            lastAccess: student.lastAccess ? new Date(student.lastAccess).toLocaleString('ko-KR') : '접속 기록 없음',
           })),
         );
         setIsMock(false);
