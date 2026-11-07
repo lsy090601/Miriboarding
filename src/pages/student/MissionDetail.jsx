@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import * as api from '../../lib/api.js'
-import { getCurrentStudentId } from '../../lib/auth.js'
-import { getOnboardingByCompanyId } from '../../mock/onboarding.js'
+import useStudentOnboarding from '../../hooks/useStudentOnboarding.js'
 import Banner from '../../components/Banner/Banner.jsx'
 import Nav from '../../components/Nav/Nav.jsx'
 import Button from '../../components/Button/Button.jsx'
@@ -15,17 +14,16 @@ export default function MissionDetail() {
   const { companyId, missionId } = useParams()
   const navigate = useNavigate()
 
-  const [onboarding, setOnboarding] = useState(null)
-  const [enrollmentId, setEnrollmentId] = useState(null)
-  const [isMock, setIsMock] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const { onboarding, enrollmentId, isLoading, loadError } = useStudentOnboarding(companyId)
+
 
   const [submissionForm, setSubmissionForm] = useState({ content: '', memo: '' })
   const [fileName, setFileName] = useState('')
   const [selectedFile, setSelectedFile] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const [submitFallback, setSubmitFallback] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+  const [savedContent, setSavedContent] = useState('')
   const [validationError, setValidationError] = useState('')
 
   useEffect(() => {
@@ -33,33 +31,13 @@ export default function MissionDetail() {
   }, [submissionForm.content, fileName])
 
   useEffect(() => {
-    let cancelled = false
-
-    async function load() {
-      const studentId = getCurrentStudentId()
-      try {
-        const enrollment = await api.enrollStudent(companyId, studentId)
-        const data = await api.getOnboarding(companyId)
-        const { submissions } = await api.listSubmissions(enrollment.enrollmentId)
-        if (cancelled) return
-        setEnrollmentId(enrollment.enrollmentId)
-        setOnboarding(api.normalizeOnboardingResponse(companyId, data, submissions))
-        setIsMock(false)
-      } catch (error) {
-        console.error('온보딩 API 연동 실패, mock으로 폴백합니다:', error)
-        if (cancelled) return
-        setOnboarding(getOnboardingByCompanyId(companyId))
-        setIsMock(true)
-      } finally {
-        if (!cancelled) setIsLoading(false)
-      }
-    }
-
-    load()
-    return () => {
-      cancelled = true
-    }
-  }, [companyId])
+    setSubmissionForm({ content: '', memo: '' })
+    setFileName('')
+    setSelectedFile(null)
+    setSubmitted(false)
+    setSavedContent('')
+    setSubmitError('')
+  }, [companyId, missionId])
 
   if (isLoading) {
     return (
@@ -83,7 +61,7 @@ export default function MissionDetail() {
             <Button variant="outline" size="sm" onClick={() => navigate('/student/home')}>
               ← 뒤로가기
             </Button>
-            <p>존재하지 않는 미션이에요.</p>
+            <p role="alert">{loadError || '존재하지 않는 미션이에요.'}</p>
           </div>
         </div>
       </>
@@ -110,15 +88,17 @@ export default function MissionDetail() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (isSubmitting) return
     const error = validateSubmission()
     if (error) {
       setValidationError(error)
       return
     }
     setValidationError('')
+    setSubmitError('')
     setIsSubmitting(true)
 
-    if (!isMock && enrollmentId) {
+    if (enrollmentId) {
       try {
         let content = submissionForm.content || submissionForm.memo
         if (mission.submissionType === 'file' && selectedFile) {
@@ -126,22 +106,21 @@ export default function MissionDetail() {
           content = uploaded.url
         }
         await api.submitMission(enrollmentId, missionId, content)
-        setIsSubmitting(false)
+        setSavedContent(content)
         setSubmitted(true)
         return
       } catch (error) {
-        console.error('미션 제출 API 실패, 로컬 시뮬레이션으로 폴백합니다:', error)
-        setSubmitFallback(true)
+        setSubmitError(error.message || '제출에 실패했습니다. 입력 내용을 확인하고 다시 시도해주세요.')
+      } finally {
+        setIsSubmitting(false)
       }
-    }
-
-    setTimeout(() => {
+    } else {
+      setSubmitError('등록 정보를 확인하지 못했습니다. 새로고침 후 다시 시도해주세요.')
       setIsSubmitting(false)
-      setSubmitted(true)
-    }, 600)
+    }
   }
 
-  const isDone = !isMock && (mission.completed || submitted)
+  const isDone = (mission.completed || submitted)
 
   return (
     <>
@@ -152,7 +131,6 @@ export default function MissionDetail() {
             ← 뒤로가기
           </Button>
 
-          {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
 
           <h1 className={styles.title}>{mission.title}</h1>
           <p className={styles.description}>{mission.description}</p>
@@ -161,9 +139,9 @@ export default function MissionDetail() {
             <div className={styles.submittedSection}>
               <div className={styles.submittedBox}>
                 <p className={styles.submittedLabel}>제출한 내용</p>
-                {mission.submissionType === 'file' && mission.submittedContent ? (
+                {mission.submissionType === 'file' && (savedContent || mission.submittedContent) ? (
                   <a
-                    href={mission.submittedContent}
+                    href={savedContent || mission.submittedContent}
                     target="_blank"
                     rel="noreferrer"
                     className={styles.submittedFileLink}
@@ -171,7 +149,7 @@ export default function MissionDetail() {
                     제출한 파일 보기
                   </a>
                 ) : (
-                  <p className={styles.submittedContent}>{mission.submittedContent || '-'}</p>
+                  <p className={styles.submittedContent}>{savedContent || mission.submittedContent || '-'}</p>
                 )}
               </div>
 
@@ -184,12 +162,10 @@ export default function MissionDetail() {
                 <Banner variant="success">제출이 완료됐어요. 회사의 피드백을 기다려주세요.</Banner>
               )}
 
-              {submitted && submitFallback && (
-                <Banner variant="warning">서버 저장에 실패해서 화면에서만 표시 중이에요.</Banner>
-              )}
             </div>
           ) : (
             <form className={styles.form} onSubmit={handleSubmit}>
+              {submitError && <p role="alert">{submitError} 다시 제출할 수 있습니다.</p>}
               {mission.submissionType === 'text' && (
                 <Input
                   multiline

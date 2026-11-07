@@ -25,6 +25,7 @@ export default function CompanySignupPage() {
   const { state } = useLocation()
 
   const [bizNumber, setBizNumber] = useState('')
+  const [lookupCompanyName, setLookupCompanyName] = useState('')
   const [verification, setVerification] = useState(null)
   const [verifying, setVerifying] = useState(false)
   const [bizError, setBizError] = useState('')
@@ -67,7 +68,7 @@ export default function CompanySignupPage() {
     setVerifying(true)
     setBizError('')
     try {
-      const result = await api.validateBusiness(bizNumber)
+      const result = await api.validateBusiness(bizNumber, lookupCompanyName.trim())
       if (result.valid) {
         setVerification({ status: 'verified' })
         setCompanyInfo({
@@ -77,7 +78,7 @@ export default function CompanySignupPage() {
         })
       } else {
         setVerification({ status: 'invalid' })
-        setBizError('사업자 번호 형식을 확인해주세요. (예: 123-45-67890)')
+        setBizError(result.message ?? '사업자 번호 형식을 확인해주세요. (예: 123-45-67890)')
       }
     } catch (error) {
       setVerification({ status: 'invalid' })
@@ -200,8 +201,12 @@ export default function CompanySignupPage() {
           <Stepper current={1} total={4} label="사업자 검증" />
         </div>
         <p className={styles.title}>사업자등록번호를 확인할게요</p>
-        <p className={styles.subtitle}>국세청에 등록된 정보로 회사를 자동으로 불러옵니다.</p>
+        <p className={styles.subtitle}>국민연금 가입 사업장 정보에서 회사명과 업종을 조회합니다.</p>
         <form className={styles.form} onSubmit={handleVerify}>
+          <div>
+            <label className={styles.fieldLabel} htmlFor="lookupCompanyName">등록된 회사명</label>
+            <Input id="lookupCompanyName" name="lookupCompanyName" value={lookupCompanyName} placeholder="예: 삼성전자" onChange={(e) => { setLookupCompanyName(e.target.value); setVerification(null); setBizError(''); }} />
+          </div>
           <div>
             <label className={styles.fieldLabel} htmlFor="bizNumber">
               사업자등록번호
@@ -217,7 +222,7 @@ export default function CompanySignupPage() {
                 error={bizError}
                 icon={<PencilIcon />}
               />
-              <Button type="submit" variant="primary" className={styles.verifyButton} disabled={verifying}>
+              <Button type="submit" variant="primary" className={styles.verifyButton} disabled={verifying || !lookupCompanyName.trim()}>
                 {verifying ? '확인 중...' : '검증하기'}
               </Button>
             </div>
@@ -240,16 +245,16 @@ export default function CompanySignupPage() {
           <Stepper current={2} total={4} label="회사 정보 확인" />
         </div>
         <div className={styles.form}>
-          <Banner variant="success">검증 성공! 회사 정보를 불러왔습니다.</Banner>
+          <Banner variant="success">사업장 정보를 불러왔습니다.</Banner>
         </div>
         <p className={styles.title} style={{ marginTop: 26 }}>
           회사 정보를 확인해주세요
         </p>
-        <p className={styles.subtitle}>국세청에 등록된 정보입니다. 다르면 이전 단계에서 다시 조회해주세요.</p>
+        <p className={styles.subtitle}>국민연금 사업장 정보입니다. 번호 앞 6자리와 회사명으로 조회하므로 회사 정보가 일치하는지 확인해주세요.</p>
         <div className={styles.sectionGroup}>
           <ReadOnlyField label="회사명" value={companyInfo.companyName} />
           <ReadOnlyField label="업종" value={companyInfo.industry} />
-          <ReadOnlyField label="설립일" value={companyInfo.foundedAt} />
+          <ReadOnlyField label="국민연금 사업장 등록일" value={companyInfo.foundedAt} />
           <Button type="button" variant="primary" className={styles.submit} onClick={handleGoToStep2}>
             다음
           </Button>

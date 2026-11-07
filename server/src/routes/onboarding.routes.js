@@ -2,6 +2,8 @@ import { Router } from 'express'
 import multer from 'multer'
 import {
   generateHandler,
+  listVersionsHandler,
+  publishVersionHandler,
   getOnboardingHandler,
   updateOnboardingHandler,
   listMissionsHandler,
@@ -22,7 +24,7 @@ import {
   removeStudentEnrollmentHandler,
   uploadMissionFileHandler,
 } from '../controllers/onboarding.controller.js'
-import { authenticate, requireOwnBody, requireOwnParam, requireRole } from '../middleware/auth.middleware.js'
+import { authenticate, requireOwnBody, requireOwnParam, requireRole, requireEnrollmentAccess, requireRelatedStudent, requireSubmissionAccess } from '../middleware/auth.middleware.js'
 
 const router = Router()
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } })
@@ -30,27 +32,30 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 
 router.use(authenticate)
 
 router.post('/generate', requireRole('company'), requireOwnBody('companyId'), generateHandler)
+router.get('/versions/:companyId', requireRole('company'), requireOwnParam('companyId'), listVersionsHandler)
+router.post('/versions/:companyId/:versionId/publish', requireRole('company'), requireOwnParam('companyId'), publishVersionHandler)
 router.get('/:companyId', getOnboardingHandler)
 router.put('/:companyId', requireRole('company'), requireOwnParam('companyId'), updateOnboardingHandler)
 router.get('/:companyId/missions', listMissionsHandler)
 router.post('/:companyId/missions', requireRole('company'), requireOwnParam('companyId'), createMissionHandler)
 router.put('/:companyId/missions/:missionId', requireRole('company'), requireOwnParam('companyId'), updateMissionHandler)
 router.delete('/:companyId/missions/:missionId', requireRole('company'), requireOwnParam('companyId'), deleteMissionHandler)
-router.put('/:enrollmentId/progress', requireRole('student'), updateProgressHandler)
+router.put('/:enrollmentId/progress', requireRole('student'), requireEnrollmentAccess, updateProgressHandler)
 router.post('/:companyId/enroll', requireRole('company'), requireOwnParam('companyId'), enrollHandler)
-router.get('/:companyId/enrollment/:studentId', getEnrollmentHandler)
-router.post('/enrollments/:enrollmentId/missions/:missionId/submissions', requireRole('student'), submitMissionHandler)
+router.get('/:companyId/enrollment/:studentId', requireRelatedStudent, getEnrollmentHandler)
+router.post('/enrollments/:enrollmentId/missions/:missionId/submissions', requireRole('student'), requireEnrollmentAccess, submitMissionHandler)
 router.post(
   '/enrollments/:enrollmentId/missions/:missionId/upload',
   requireRole('student'),
+  requireEnrollmentAccess,
   upload.single('file'),
   uploadMissionFileHandler,
 )
-router.get('/enrollments/:enrollmentId/submissions', listSubmissionsHandler)
+router.get('/enrollments/:enrollmentId/submissions', requireEnrollmentAccess, listSubmissionsHandler)
 router.get('/:companyId/students', requireRole('company'), requireOwnParam('companyId'), listEnrolledStudentsHandler)
 router.get('/:companyId/students/:studentId', requireRole('company'), requireOwnParam('companyId'), getStudentDetailHandler)
 router.post('/:companyId/students/register', requireRole('company'), requireOwnParam('companyId'), registerStudentsHandler)
-router.post('/submissions/:submissionId/feedback', requireRole('company'), sendMissionFeedbackHandler)
+router.post('/submissions/:submissionId/feedback', requireRole('company'), requireSubmissionAccess, sendMissionFeedbackHandler)
 router.get('/student/:studentId/enrollments', requireRole('student'), requireOwnParam('studentId'), getStudentEnrollmentsHandler)
 router.put('/:companyId/students/:studentId/target-date', requireRole('company'), requireOwnParam('companyId'), updateStudentTargetDateHandler)
 router.delete('/:companyId/students/:studentId', requireRole('company'), requireOwnParam('companyId'), removeStudentEnrollmentHandler)

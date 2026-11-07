@@ -48,10 +48,10 @@ export function login(email, password) {
   })
 }
 
-export function validateBusiness(businessNumber) {
+export function validateBusiness(businessNumber, companyName) {
   return apiFetch('/api/auth/validate-business', {
     method: 'POST',
-    body: JSON.stringify({ businessNumber }),
+    body: JSON.stringify({ businessNumber, companyName }),
   })
 }
 
@@ -93,21 +93,29 @@ export function getCompanyProfile(companyId) {
   return apiFetch(`/api/auth/company/${companyId}`)
 }
 
-export function getOnboarding(companyId) {
-  return apiFetch(`/api/onboarding/${companyId}`)
+export function getOnboarding(companyId, versionId) {
+  return apiFetch(`/api/onboarding/${companyId}${versionId ? `?versionId=${encodeURIComponent(versionId)}` : ''}`)
 }
 
-export function generateOnboarding({ companyId, jobTitle, companyName, targetDate }) {
+export function listOnboardingVersions(companyId) {
+  return apiFetch(`/api/onboarding/versions/${companyId}`)
+}
+
+export function publishOnboardingVersion(companyId, versionId) {
+  return apiFetch(`/api/onboarding/versions/${companyId}/${versionId}/publish`, { method: 'POST' })
+}
+
+export function generateOnboarding({ companyId, jobTitle, industry, companyDescription, jobDescription, targetDate }) {
   return apiFetch('/api/onboarding/generate', {
     method: 'POST',
-    body: JSON.stringify({ companyId, jobTitle, companyName, targetDate }),
+    body: JSON.stringify({ companyId, jobTitle, industry, companyDescription, jobDescription, targetDate }),
   })
 }
 
-export function updateOnboarding(companyId, { schedules, missions, targetDate }) {
+export function updateOnboarding(companyId, { schedules, missions, targetDate, versionId }) {
   return apiFetch(`/api/onboarding/${companyId}`, {
     method: 'PUT',
-    body: JSON.stringify({ schedules, missions, targetDate }),
+    body: JSON.stringify({ schedules, missions, targetDate, versionId }),
   })
 }
 

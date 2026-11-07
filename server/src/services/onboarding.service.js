@@ -3,6 +3,7 @@ import { supabaseAdmin } from '../config/supabase.js'
 import { isNonEmptyString } from '../utils/validation.js'
 import { OnboardingError } from '../utils/errors.js'
 import { generateOnboardingPlan } from './gemini.service.js'
+import { getVersion, getAssignedOnboarding, saveDraft, versionError } from './onboardingVersions.service.js'
 
 const GENERATE_COOLDOWN_MS = 60_000
 const lastGenerateAtByCompany = new Map()
@@ -18,12 +19,12 @@ function checkGenerateRateLimit(companyId) {
 
 function normalizeMissions(rawMissions) {
   return rawMissions.map((mission, index) => ({
-    id: mission.id ?? randomUUID(),
+    id: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(mission.id ?? '') ? mission.id : randomUUID(),
     title: mission.title,
     description: mission.description,
     order: mission.order ?? index + 1,
     submissionType: mission.submissionType ?? 'text',
-    ...(mission.options ? { options: mission.options } : {}),
+    options: Array.isArray(mission.options) ? mission.options.filter(option => typeof option === 'string').map(option => option.trim()).filter(Boolean) : [],
   }))
 }
 
@@ -45,18 +46,7 @@ async function fetchOnboardingRow(companyId) {
 }
 
 async function saveMissions(companyId, missions) {
-  const { data, error } = await supabaseAdmin
-    .from('company_onboarding')
-    .update({ missions, updated_at: new Date().toISOString() })
-    .eq('company_id', companyId)
-    .select()
-    .single()
-
-  if (error) {
-    console.error('[onboarding] saveMissions 실패:', error)
-    throw new OnboardingError(502, 'SUPABASE_ERROR', '미션 정보 저장 중 오류가 발생했습니다.')
-  }
-  return data
+  throw new OnboardingError(409, 'PUBLISHED_READ_ONLY', '배포한 미션은 수정할 수 없습니다. 새 초안에서 수정해주세요.')
 }
 
 async function fetchCompanyName(companyId) {
@@ -70,19 +60,37 @@ async function fetchCompanyName(companyId) {
   return data.company_name
 }
 
-export async function generateOnboarding({ companyId, jobTitle, companyName, targetDate }) {
-  if (!isNonEmptyString(companyId) || !isNonEmptyString(jobTitle) || !isNonEmptyString(companyName)) {
-    throw new OnboardingError(400, 'INVALID_INPUT', 'companyId, jobTitle, companyName을 모두 입력해주세요.')
+export async function generateOnboarding({ companyId, jobTitle, industry, companyDescription, jobDescription, targetDate }) {
+  if (!isNonEmptyString(companyId) || !isNonEmptyString(jobTitle)) {
+    throw new OnboardingError(400, 'INVALID_INPUT', '회사와 직무를 입력해주세요.')
   }
 
   checkGenerateRateLimit(companyId)
 
-  const plan = await generateOnboardingPlan({ jobTitle, companyName })
+  // AI 호출 전에 DB 변경이 적용됐는지 확인한다.
+  const { error: schemaError } = await supabaseAdmin.from('company_onboarding_versions').select('id').limit(1)
+  if (schemaError) throw versionError(schemaError)
+
+  for (const [label, value, limit] of [
+    ['업종', industry, 200], ['회사 소개', companyDescription, 2000], ['담당 업무', jobDescription, 2000],
+  ]) {
+    if (!isNonEmptyString(value) || value.trim().length > limit) {
+      throw new OnboardingError(400, 'INVALID_INPUT', `${label}을 1~${limit}자로 입력해주세요.`)
+    }
+  }
+  const { data: company, error: companyError } = await supabaseAdmin
+    .from('companies').select('company_name, industry').eq('id', companyId).maybeSingle()
+  if (companyError) throw new OnboardingError(502, 'SUPABASE_ERROR', '회사 정보 조회에 실패했습니다.')
+  if (!company) throw new OnboardingError(404, 'NOT_FOUND', '회사 정보를 찾을 수 없습니다.')
+  const plan = await generateOnboardingPlan({
+    jobTitle: jobTitle.trim(), companyName: company.company_name,
+    industry: industry.trim(), companyDescription: companyDescription.trim(), jobDescription: jobDescription.trim(),
+  })
   const missions = normalizeMissions(plan.missions)
 
   const { data, error } = await supabaseAdmin
-    .from('company_onboarding')
-    .upsert(
+    .from('company_onboarding_versions')
+    .insert(
       {
         company_id: companyId,
         job_title: jobTitle,
@@ -91,7 +99,6 @@ export async function generateOnboarding({ companyId, jobTitle, companyName, tar
         target_date: targetDate ?? null,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: 'company_id' },
     )
     .select()
     .single()
@@ -105,21 +112,26 @@ export async function generateOnboarding({ companyId, jobTitle, companyName, tar
   lastGenerateAtByCompany.set(companyId, Date.now())
 
   return {
+    versionId: data.id,
+    status: data.status,
     schedules: data.schedules,
     missions: data.missions,
     jobTitle: data.job_title,
-    companyName,
+    companyName: company.company_name,
     targetDate: data.target_date,
   }
 }
 
-export async function getOnboarding(companyId) {
+export async function getOnboarding(companyId, { versionId, studentId } = {}) {
   if (!isNonEmptyString(companyId)) {
     throw new OnboardingError(400, 'INVALID_INPUT', 'companyId가 필요합니다.')
   }
-  const row = await fetchOnboardingRow(companyId)
+  const row = studentId ? await getAssignedOnboarding(companyId, studentId)
+    : versionId ? await getVersion(companyId, versionId) : await fetchOnboardingRow(companyId)
   const companyName = await fetchCompanyName(companyId)
   return {
+    versionId: row.version_id ?? row.id,
+    status: row.status ?? 'published',
     schedules: row.schedules,
     missions: row.missions,
     jobTitle: row.job_title,
@@ -129,7 +141,7 @@ export async function getOnboarding(companyId) {
   }
 }
 
-export async function updateOnboarding(companyId, { schedules, missions, targetDate }) {
+export async function updateOnboarding(companyId, { schedules, missions, targetDate, versionId }) {
   if (!isNonEmptyString(companyId)) {
     throw new OnboardingError(400, 'INVALID_INPUT', 'companyId가 필요합니다.')
   }
@@ -140,24 +152,13 @@ export async function updateOnboarding(companyId, { schedules, missions, targetD
     throw new OnboardingError(400, 'INVALID_INPUT', 'missions가 올바르지 않습니다.')
   }
 
-  await fetchOnboardingRow(companyId)
-
-  const { data, error } = await supabaseAdmin
-    .from('company_onboarding')
-    .update({
+  if (!isNonEmptyString(versionId)) throw new OnboardingError(409, 'PUBLISHED_READ_ONLY', '배포한 계획은 수정할 수 없습니다. 새 초안을 생성해주세요.')
+  const data = await saveDraft(companyId, versionId, {
       schedules,
       missions: normalizeMissions(missions),
       ...(targetDate !== undefined ? { target_date: targetDate } : {}),
       updated_at: new Date().toISOString(),
     })
-    .eq('company_id', companyId)
-    .select()
-    .single()
-
-  if (error) {
-    console.error('[onboarding] updateOnboarding 실패:', error)
-    throw new OnboardingError(502, 'SUPABASE_ERROR', '온보딩 정보 수정 중 오류가 발생했습니다.')
-  }
 
   return { success: true, updatedAt: data.updated_at }
 }
@@ -250,13 +251,19 @@ export async function enrollStudent(companyId, studentId) {
     throw new OnboardingError(400, 'INVALID_INPUT', 'companyId, studentId가 필요합니다.')
   }
 
+  const { data: existing, error: lookupError } = await supabaseAdmin.from('student_enrollment')
+    .select('id, target_date').eq('company_id', companyId).eq('student_id', studentId).maybeSingle()
+  if (lookupError) throw new OnboardingError(502, 'SUPABASE_ERROR', '등록 정보 조회에 실패했습니다.')
+  if (existing) return { enrollmentId: existing.id, targetDate: existing.target_date }
+  await fetchOnboardingRow(companyId)
   const { data, error } = await supabaseAdmin
     .from('student_enrollment')
-    .upsert({ company_id: companyId, student_id: studentId }, { onConflict: 'student_id,company_id' })
+    .insert({ company_id: companyId, student_id: studentId })
     .select()
     .single()
 
   if (error) {
+    if (error.code === '23505') return getEnrollment(companyId, studentId)
     console.error('[onboarding] enrollStudent 실패:', error)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '등록 정보 저장 중 오류가 발생했습니다.')
   }
@@ -342,7 +349,7 @@ export async function submitMission(enrollmentId, missionId, content) {
 
   const { data: enrollment, error: enrollmentError } = await supabaseAdmin
     .from('student_enrollment')
-    .select('company_id')
+    .select('company_id, student_id')
     .eq('id', enrollmentId)
     .maybeSingle()
 
@@ -354,10 +361,14 @@ export async function submitMission(enrollmentId, missionId, content) {
     throw new OnboardingError(404, 'NOT_FOUND', '등록 정보를 찾을 수 없습니다.')
   }
 
-  const row = await fetchOnboardingRow(enrollment.company_id)
+  const row = await getAssignedOnboarding(enrollment.company_id, enrollment.student_id)
   const missionExists = (row.missions ?? []).some((mission) => mission.id === missionId)
   if (!missionExists) {
     throw new OnboardingError(404, 'NOT_FOUND', '미션을 찾을 수 없습니다.')
+  }
+  const mission = row.missions.find((item) => item.id === missionId)
+  if (!isNonEmptyString(content) || (mission.submissionType === 'choice' && !mission.options?.includes(content))) {
+    throw new OnboardingError(400, 'INVALID_INPUT', '제출 내용을 확인해주세요.')
   }
 
   const { data, error } = await supabaseAdmin
@@ -400,7 +411,7 @@ export async function listEnrolledStudents(companyId) {
 
   const { data: enrollments, error: enrollmentsError } = await supabaseAdmin
     .from('student_enrollment')
-    .select('id, student_id, enrolled_at')
+    .select('*')
     .eq('company_id', companyId)
 
   if (enrollmentsError) {
@@ -421,7 +432,7 @@ export async function listEnrolledStudents(companyId) {
     throw new OnboardingError(502, 'SUPABASE_ERROR', '학생 정보 조회 중 오류가 발생했습니다.')
   }
 
-  const { data: users, error: usersError } = await supabaseAdmin.from('users').select('id, email').in('id', studentIds)
+  const { data: users, error: usersError } = await supabaseAdmin.from('users').select('*').in('id', studentIds)
   if (usersError) {
     console.error('[onboarding] listEnrolledStudents - users 조회 실패:', usersError)
     throw new OnboardingError(502, 'SUPABASE_ERROR', '사용자 정보 조회 중 오류가 발생했습니다.')
@@ -432,7 +443,6 @@ export async function listEnrolledStudents(companyId) {
     .select('missions')
     .eq('company_id', companyId)
     .maybeSingle()
-  const totalMissions = onboardingRow?.missions?.length ?? 0
 
   const { data: submissions, error: submissionsError } = await supabaseAdmin
     .from('mission_submission')
@@ -445,10 +455,14 @@ export async function listEnrolledStudents(companyId) {
 
   const studentById = new Map((students ?? []).map((s) => [s.id, s]))
   const emailById = new Map((users ?? []).map((u) => [u.id, u.email]))
+  const lastSeenById = new Map((users ?? []).map((u) => [u.id, u.last_seen_at ?? null]))
 
   return enrollments.map((enrollment) => {
     const subs = (submissions ?? []).filter((s) => s.enrollment_id === enrollment.id)
-    const completedCount = new Set(subs.map((s) => s.mission_id)).size
+    const missions = enrollment.onboarding_snapshot?.missions ?? onboardingRow?.missions ?? []
+    const totalMissions = missions.length
+    const missionIds = new Set(missions.map((m) => m.id))
+    const completedCount = new Set(subs.filter((s) => missionIds.has(s.mission_id)).map((s) => s.mission_id)).size
     const lastSubmittedAt = subs.reduce(
       (latest, s) => (!latest || s.submitted_at > latest ? s.submitted_at : latest),
       null,
@@ -462,7 +476,8 @@ export async function listEnrolledStudents(companyId) {
       progress: totalMissions ? Math.round((completedCount / totalMissions) * 100) : 0,
       completedCount,
       totalMissions,
-      lastAccess: lastSubmittedAt ?? enrollment.enrolled_at,
+      lastAccess: lastSeenById.get(enrollment.student_id),
+      lastSubmittedAt,
     }
   })
 }
@@ -501,7 +516,7 @@ export async function getStudentDetail(companyId, studentId) {
 
   let missions = []
   try {
-    const row = await fetchOnboardingRow(companyId)
+    const row = await getAssignedOnboarding(companyId, studentId)
     missions = row.missions ?? []
   } catch (err) {
     if (!(err instanceof OnboardingError && err.code === 'NOT_FOUND')) throw err

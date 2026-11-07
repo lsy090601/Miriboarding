@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import * as api from '../../lib/api.js'
-import { getCurrentStudentId } from '../../lib/auth.js'
-import { getOnboardingByCompanyId, IMPORTANCE_LABEL } from '../../mock/onboarding.js'
+import useStudentOnboarding from '../../hooks/useStudentOnboarding.js'
+import { IMPORTANCE_LABEL } from '../../mock/onboarding.js'
 import Modal from '../../components/Modal/Modal.jsx'
-import Banner from '../../components/Banner/Banner.jsx'
 import Nav from '../../components/Nav/Nav.jsx'
 import Button from '../../components/Button/Button.jsx'
 import Tabs from '../../components/Tabs/Tabs.jsx'
@@ -26,36 +24,7 @@ export default function OnboardingSchedule() {
   const [activeTab, setActiveTab] = useState('day')
   const [activeSchedule, setActiveSchedule] = useState(null)
 
-  const [onboarding, setOnboarding] = useState(null)
-  const [isMock, setIsMock] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    let cancelled = false
-
-    async function load() {
-      const studentId = getCurrentStudentId()
-      try {
-        await api.enrollStudent(companyId, studentId)
-        const data = await api.getOnboarding(companyId)
-        if (cancelled) return
-        setOnboarding(api.normalizeOnboardingResponse(companyId, data, []))
-        setIsMock(false)
-      } catch (error) {
-        console.error('온보딩 API 연동 실패, mock으로 폴백합니다:', error)
-        if (cancelled) return
-        setOnboarding(getOnboardingByCompanyId(companyId))
-        setIsMock(true)
-      } finally {
-        if (!cancelled) setIsLoading(false)
-      }
-    }
-
-    load()
-    return () => {
-      cancelled = true
-    }
-  }, [companyId])
+  const { onboarding, isLoading, loadError } = useStudentOnboarding(companyId)
 
   if (isLoading) {
     return (
@@ -77,7 +46,7 @@ export default function OnboardingSchedule() {
             <Button variant="outline" size="sm" onClick={() => navigate('/student/home')}>
               ← 뒤로가기
             </Button>
-            <p>존재하지 않는 온보딩이에요.</p>
+            <p role="alert">{loadError}</p>
           </div>
         </div>
       </>
@@ -95,7 +64,6 @@ export default function OnboardingSchedule() {
             ← 뒤로가기
           </Button>
 
-          {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
 
           <h1 className={styles.title}>
             {onboarding.companyName}의 {onboarding.jobTitle}

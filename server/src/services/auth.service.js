@@ -1,7 +1,7 @@
 import { supabaseAuth, supabaseAdmin } from '../config/supabase.js'
 import { isValidEmail, isValidPassword, isValidBusinessNumber, isNonEmptyString, normalizeBusinessNumber } from '../utils/validation.js'
-import { lookupMockCompany } from '../utils/mockBusinessRegistry.js'
 import { lookupNpsCompany } from './nps.service.js'
+import { recordActivity } from './activity.service.js'
 
 export class AuthError extends Error {
   constructor(status, code, message) {
@@ -49,20 +49,20 @@ async function rollbackSignup(userId) {
   await supabaseAdmin.auth.admin.deleteUser(userId).catch(() => {})
 }
 
-// NPS_SERVICE_KEY가 설정돼 있으면 국민연금공단 API로 실제 회사명/업종/등록일을
-// 가져오고, 없거나(키 미설정, 호출 실패, 한 회사로 못 좁힘) 필드가 비면 그 필드만 mock으로 채운다.
-// companyName은 선택값이다. 주면 검색이 한 회사로 좁혀질 가능성이 크게 올라간다.
+// 실제 조회 결과만 반환한다. 조회 불가 시 임의 회사 정보로 대체하지 않는다.
 export async function validateBusiness(businessNumber, companyName) {
   if (!isValidBusinessNumber(businessNumber)) {
     return { valid: false }
   }
-  const mock = lookupMockCompany(businessNumber)
   const nps = await lookupNpsCompany(businessNumber, companyName)
+  if (!nps?.company_name || !nps.industry || !nps.founded_date) {
+    return { valid: false, message: '회사 정보를 확인하지 못했습니다. 등록된 회사명과 번호를 확인해주세요. 여러 사업장이 검색되거나 조회 서비스에 문제가 있어도 실패할 수 있습니다.' }
+  }
   return {
     valid: true,
-    company_name: nps?.company_name || mock.company_name,
-    industry: nps?.industry || mock.industry,
-    founded_date: nps?.founded_date || mock.founded_date,
+    company_name: nps.company_name,
+    industry: nps.industry,
+    founded_date: nps.founded_date,
   }
 }
 
@@ -165,7 +165,7 @@ export async function signupCompany({
 export async function getCompanyProfile(companyId) {
   const { data, error } = await supabaseAdmin
     .from('companies')
-    .select('company_name')
+    .select('company_name, industry')
     .eq('id', companyId)
     .maybeSingle()
 
@@ -177,7 +177,7 @@ export async function getCompanyProfile(companyId) {
     throw new AuthError(404, 'NOT_FOUND', '회사 정보를 찾을 수 없습니다.')
   }
 
-  return { companyName: data.company_name }
+  return { companyName: data.company_name, industry: data.industry }
 }
 
 export async function login({ email, password }) {
@@ -201,6 +201,7 @@ export async function login({ email, password }) {
     throw new AuthError(502, 'SUPABASE_ERROR', '사용자 정보 조회 중 오류가 발생했습니다.')
   }
 
+  await recordActivity(data.user.id, true)
   return {
     user_type: userRow.user_type,
     user_id: data.user.id,
