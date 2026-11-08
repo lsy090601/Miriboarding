@@ -120,6 +120,12 @@
   color: var(--color-text-muted);
 }
 
+.fieldSuccess {
+  margin: 6px 0 0 2px;
+  font-size: 13px;
+  color: var(--color-success);
+}
+
 .footer a,
 .footerLink {
   color: var(--color-primary);

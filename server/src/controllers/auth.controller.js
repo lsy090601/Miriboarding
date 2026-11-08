@@ -1,4 +1,4 @@
-import { AuthError, validateBusiness, signupStudent, signupCompany, login, getCompanyProfile } from '../services/auth.service.js'
+import { AuthError, checkEmailAvailable, validateBusiness, signupStudent, signupCompany, login, getCompanyProfile } from '../services/auth.service.js'
 import { isNonEmptyString } from '../utils/validation.js'
 
 function handleError(res, error) {
@@ -7,6 +7,15 @@ function handleError(res, error) {
   }
   console.error(error)
   return res.status(500).json({ success: false, code: 'INTERNAL_ERROR', message: '서버 오류가 발생했습니다.' })
+}
+
+export async function checkEmailHandler(req, res) {
+  try {
+    const result = await checkEmailAvailable(req.body?.email)
+    return res.status(200).json(result)
+  } catch (error) {
+    return handleError(res, error)
+  }
 }
 
 export async function validateBusinessHandler(req, res) {

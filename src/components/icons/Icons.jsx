@@ -16,6 +16,16 @@ export function LockIcon(props) {
   )
 }
 
+// 비밀번호가 보이는 상태에서 보여주는 열린 자물쇠
+export function UnlockIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="100%" height="100%" {...props}>
+      <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" />
+      <path d="M7.5 10.5V7.5a4.5 4.5 0 0 1 8.6-1.8" />
+    </svg>
+  )
+}
+
 export function UserIcon(props) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="100%" height="100%" {...props}>

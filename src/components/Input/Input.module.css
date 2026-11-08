@@ -77,6 +77,18 @@
   margin-left: 12px;
 }
 
+.iconButton {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.iconButton:hover,
+.iconButton:focus-visible {
+  color: var(--color-text);
+}
+
 .errorText {
   margin: 6px 0 0 2px;
   font-size: 13px;
