@@ -8,6 +8,7 @@ export default function DuplicateCheckField({
   name,
   value,
   onChange,
+  onBlur,
   placeholder,
   error,
   status,
@@ -29,12 +30,13 @@ export default function DuplicateCheckField({
           name={name}
           value={value}
           onChange={onChange}
+          onBlur={onBlur}
           placeholder={placeholder}
           error={error}
           autoComplete="email"
         />
         <Button type="button" variant="outline" className={styles.checkButton} onClick={onCheck} disabled={checking}>
-          {checking ? '확인 중...' : '중복 확인'}
+          {checking ? '확인 중...' : '중복확인'}
         </Button>
       </div>
       {status === 'available' && <p className={styles.successText}>사용 가능한 이메일입니다.</p>}

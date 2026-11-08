@@ -1,0 +1,54 @@
+.root {
+  position: relative;
+  width: 100%;
+}
+
+.list {
+  position: absolute;
+  top: calc(var(--field-height) + 6px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  max-height: 264px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 15px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.itemActive {
+  background: var(--color-surface);
+}
+
+.name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.meta {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}

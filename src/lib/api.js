@@ -55,10 +55,21 @@ export function validateBusiness(businessNumber, companyName) {
   })
 }
 
-export function signupStudent({ email, password, name, school, age }) {
+export function checkEmail(email) {
+  return apiFetch('/api/auth/check-email', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
+}
+
+export function searchSchools(query) {
+  return apiFetch(`/api/schools?q=${encodeURIComponent(query)}`)
+}
+
+export function signupStudent({ email, password, name, school, age, student_number }) {
   return apiFetch('/api/auth/signup/student', {
     method: 'POST',
-    body: JSON.stringify({ email, password, name, school, age }),
+    body: JSON.stringify({ email, password, name, school, age, student_number }),
   })
 }
 

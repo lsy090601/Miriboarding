@@ -26,6 +26,17 @@ async function assertEmailNotTaken(email) {
   }
 }
 
+// 회원가입 화면의 '중복확인' 버튼용. 가입 마지막 단계의 assertEmailNotTaken과 같은 기준으로 조회한다.
+export async function checkEmailAvailable(email) {
+  if (!isValidEmail(email)) throw new AuthError(400, 'INVALID_EMAIL', '이메일 형식이 올바르지 않습니다.')
+  const { data, error } = await supabaseAdmin.from('users').select('id').eq('email', email.trim()).maybeSingle()
+  if (error) {
+    console.error('[auth] 이메일 중복확인 실패:', error)
+    throw new AuthError(502, 'SUPABASE_ERROR', '이메일 중복 확인 중 오류가 발생했습니다.')
+  }
+  return { available: !data }
+}
+
 async function createAuthUser(email, password) {
   const { data, error } = await supabaseAuth.auth.signUp({ email, password })
   if (error) {
@@ -66,10 +77,14 @@ export async function validateBusiness(businessNumber, companyName) {
   }
 }
 
-export async function signupStudent({ email, password, name, school, age }) {
+export async function signupStudent({ email, password, name, school, age, student_number }) {
   requireEmailAndPassword(email, password)
   if (!isNonEmptyString(name) || !isNonEmptyString(school) || !Number.isInteger(age) || age <= 0) {
     throw new AuthError(400, 'INVALID_INPUT', '이름, 학교, 나이를 모두 입력해주세요.')
+  }
+  const studentNumber = typeof student_number === 'string' ? student_number.trim() : ''
+  if (!/^\d{3,6}$/.test(studentNumber)) {
+    throw new AuthError(400, 'INVALID_STUDENT_NUMBER', '학번은 숫자로 입력해주세요. (예: 2310)')
   }
 
   await assertEmailNotTaken(email)
@@ -86,12 +101,14 @@ export async function signupStudent({ email, password, name, school, age }) {
     throw new AuthError(502, 'SUPABASE_ERROR', '사용자 정보 저장 중 오류가 발생했습니다.')
   }
 
-  const { error: studentsError } = await supabaseAdmin.from('students').insert({
-    id: authUser.id,
-    name,
-    school,
-    age,
-  })
+  const studentRow = { id: authUser.id, name, school, age }
+  let { error: studentsError } = await supabaseAdmin.from('students').insert({ ...studentRow, student_number: studentNumber })
+  // students.student_number 컬럼이 아직 없는 DB(migration 0005 미적용)에서도 가입이 막히지 않도록
+  // 학번만 빼고 한 번 더 저장한다. 이 경우 학번은 저장되지 않으니 migration을 적용해야 한다.
+  if (studentsError && (studentsError.code === 'PGRST204' || studentsError.code === '42703')) {
+    console.error('[auth] students.student_number 컬럼이 없어 학번 없이 저장합니다. migration 0005를 적용하세요.')
+    ;({ error: studentsError } = await supabaseAdmin.from('students').insert(studentRow))
+  }
   if (studentsError) {
     console.error('students insert 실패:', studentsError)
     await rollbackSignup(authUser.id)
