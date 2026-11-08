@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import {
+  checkEmailHandler,
   validateBusinessHandler,
   signupStudentHandler,
   signupCompanyHandler,
@@ -10,6 +11,7 @@ import { authenticate, requireOwnParam, requireRole } from '../middleware/auth.m
 
 const router = Router()
 
+router.post('/check-email', checkEmailHandler)
 router.post('/validate-business', validateBusinessHandler)
 router.post('/signup/student', signupStudentHandler)
 router.post('/signup/company', signupCompanyHandler)

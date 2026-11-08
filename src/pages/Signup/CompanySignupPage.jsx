@@ -1,28 +1,28 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import AuthLayout from '../../components/AuthLayout/AuthLayout.jsx'
 import Input from '../../components/Input/Input.jsx'
 import Select from '../../components/Select/Select.jsx'
 import Button from '../../components/Button/Button.jsx'
-import Stepper from '../../components/Stepper/Stepper.jsx'
 import Banner from '../../components/Banner/Banner.jsx'
-import DuplicateCheckField from '../../components/DuplicateCheckField/DuplicateCheckField.jsx'
-import PasswordStrengthMeter from '../../components/PasswordStrengthMeter/PasswordStrengthMeter.jsx'
 import TermsCheckboxes from '../../components/TermsCheckboxes/TermsCheckboxes.jsx'
 import ReadOnlyField from '../../components/ReadOnlyField/ReadOnlyField.jsx'
-import { MailIcon, LockIcon, UserIcon, PencilIcon, PhoneIcon } from '../../components/icons/Icons.jsx'
-import { isValidEmail, isValidPassword, doPasswordsMatch, isRequired, isValidPhone } from '../../utils/validation.js'
+import { PencilIcon, PhoneIcon } from '../../components/icons/Icons.jsx'
+import { isRequired, isValidPhone } from '../../utils/validation.js'
 import { formatBizNumber } from '../../utils/format.js'
-import { checkEmailExists } from '../../api/mockApi.js'
 import * as api from '../../lib/api.js'
 import styles from './SignupForm.module.css'
 
 const POSITION_OPTIONS = ['사원', '주임', '대리', '과장', '차장', '부장', '이사', '대표']
 
+// 기업 가입 흐름: 계정 정보(역할 선택 화면에서 입력) → 사업자 확인 → 회사 정보 확인 → 담당자 정보
+// 이메일·이름·비밀번호는 앞의 계정 정보 화면에서 이미 받았으므로 여기서는 다시 입력받지 않는다.
 export default function CompanySignupPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const step = searchParams.get('step') === '2' ? 2 : 1
   const { state } = useLocation()
+  // setSearchParams로 주소가 바뀌면 location.state가 비므로, 처음 받은 계정 정보를 따로 보관한다.
+  const [account] = useState(() => state ?? null)
 
   const [bizNumber, setBizNumber] = useState('')
   const [lookupCompanyName, setLookupCompanyName] = useState('')
@@ -31,20 +31,7 @@ export default function CompanySignupPage() {
   const [bizError, setBizError] = useState('')
   const [companyInfo, setCompanyInfo] = useState({ companyName: '', industry: '', foundedAt: '' })
 
-  // step=2 화면을 "계정 정보"/"담당자 정보" 두 화면으로 나누기 위한 로컬 상태입니다.
-  // URL의 step 파라미터, validateContactForm/handleSubmit 로직은 기존과 동일합니다.
-  const [contactSubStep, setContactSubStep] = useState(1)
-
-  const [contactForm, setContactForm] = useState({
-    contactName: state?.name ?? '',
-    position: '',
-    email: state?.email ?? '',
-    password: state?.password ?? '',
-    confirmPassword: state?.confirmPassword ?? '',
-    companyPhone: '',
-  })
-  const [emailCheck, setEmailCheck] = useState(null)
-  const [checkingEmail, setCheckingEmail] = useState(false)
+  const [contactForm, setContactForm] = useState({ position: '', companyPhone: '' })
   const [terms, setTerms] = useState({ tos: false, privacy: false, age: false, marketing: false })
   const [errors, setErrors] = useState({})
   const [submitted, setSubmitted] = useState(false)
@@ -55,6 +42,9 @@ export default function CompanySignupPage() {
       setSearchParams({ step: '1' })
     }
   }, [step, verification, setSearchParams])
+
+  // 계정 정보 화면을 거치지 않고 주소로 바로 들어온 경우
+  if (!account?.email) return <Navigate to="/signup" replace />
 
   function handleBizNumberChange(e) {
     setBizNumber(formatBizNumber(e.target.value))
@@ -90,50 +80,17 @@ export default function CompanySignupPage() {
 
   function handleGoToStep2() {
     if (verification?.status !== 'verified') return
-    setContactSubStep(1)
     setSearchParams({ step: '2' })
   }
 
   function handleContactChange(e) {
     const { name, value } = e.target
     setContactForm((prev) => ({ ...prev, [name]: value }))
-    if (name === 'email') setEmailCheck(null)
-  }
-
-  async function handleCheckEmail() {
-    if (!isValidEmail(contactForm.email)) {
-      setErrors((prev) => ({ ...prev, email: '올바른 이메일 형식이 아닙니다.' }))
-      return
-    }
-    setCheckingEmail(true)
-    const result = await checkEmailExists(contactForm.email)
-    setCheckingEmail(false)
-    setEmailCheck(result.exists ? 'taken' : 'available')
-  }
-
-  function handleAccountNext() {
-    const nextErrors = {}
-    if (!isRequired(contactForm.contactName)) nextErrors.contactName = '담당자명을 입력해주세요.'
-    if (!isRequired(contactForm.email)) nextErrors.email = '이메일을 입력해주세요.'
-    else if (!isValidEmail(contactForm.email)) nextErrors.email = '올바른 이메일 형식이 아닙니다.'
-    else if (emailCheck !== 'available') nextErrors.email = '이메일 중복 확인을 해주세요.'
-    if (!isValidPassword(contactForm.password)) nextErrors.password = '비밀번호는 8자 이상이어야 합니다.'
-    if (!doPasswordsMatch(contactForm.password, contactForm.confirmPassword))
-      nextErrors.confirmPassword = '비밀번호가 일치하지 않습니다.'
-    setErrors(nextErrors)
-    if (Object.keys(nextErrors).length === 0) setContactSubStep(2)
   }
 
   function validateContactForm() {
     const nextErrors = {}
-    if (!isRequired(contactForm.contactName)) nextErrors.contactName = '담당자명을 입력해주세요.'
     if (!isRequired(contactForm.position)) nextErrors.position = '직급을 선택해주세요.'
-    if (!isRequired(contactForm.email)) nextErrors.email = '이메일을 입력해주세요.'
-    else if (!isValidEmail(contactForm.email)) nextErrors.email = '올바른 이메일 형식이 아닙니다.'
-    else if (emailCheck !== 'available') nextErrors.email = '이메일 중복 확인을 해주세요.'
-    if (!isValidPassword(contactForm.password)) nextErrors.password = '비밀번호는 8자 이상이어야 합니다.'
-    if (!doPasswordsMatch(contactForm.password, contactForm.confirmPassword))
-      nextErrors.confirmPassword = '비밀번호가 일치하지 않습니다.'
     if (contactForm.companyPhone && !isValidPhone(contactForm.companyPhone))
       nextErrors.companyPhone = '전화번호 형식을 확인해주세요. (예: 02-1234-5678)'
     if (!terms.tos || !terms.privacy || !terms.age) nextErrors.terms = '약관에 모두 동의해주세요.'
@@ -147,21 +104,20 @@ export default function CompanySignupPage() {
     setIsSubmitting(true)
     try {
       await api.signupCompany({
-        email: contactForm.email,
-        password: contactForm.password,
+        email: account.email,
+        password: account.password,
         businessNumber: bizNumber,
         company_name: companyInfo.companyName,
         industry: companyInfo.industry,
         founded_date: companyInfo.foundedAt,
-        contact_name: contactForm.contactName,
+        contact_name: account.name,
         contact_position: contactForm.position,
         contact_phone: contactForm.companyPhone,
       })
       setSubmitted(true)
     } catch (error) {
       if (error.code === 'EMAIL_TAKEN') {
-        setErrors({ email: '이미 가입된 이메일입니다.' })
-        setContactSubStep(1)
+        setErrors({ email: '이미 가입된 이메일입니다. 처음 화면에서 다른 이메일로 다시 가입해주세요.' })
       } else if (error.code === 'BUSINESS_NUMBER_TAKEN') {
         setVerification(null)
         setBizError('이미 가입된 사업자등록번호입니다. 다른 사업자번호로 시도해주세요.')
@@ -193,13 +149,10 @@ export default function CompanySignupPage() {
     )
   }
 
-  // 화면 1/4 · 사업자 검증 전
+  // 사업자 검증 전
   if (step === 1 && verification?.status !== 'verified') {
     return (
       <AuthLayout>
-        <div className={styles.stepperRow}>
-          <Stepper current={1} total={4} label="사업자 검증" />
-        </div>
         <p className={styles.title}>사업자등록번호를 확인할게요</p>
         <p className={styles.subtitle}>국민연금 가입 사업장 정보에서 회사명과 업종을 조회합니다.</p>
         <form className={styles.form} onSubmit={handleVerify}>
@@ -237,13 +190,10 @@ export default function CompanySignupPage() {
     )
   }
 
-  // 화면 2/4 · 사업자 검증 성공 (회사 정보 확인)
+  // 사업자 검증 성공 (회사 정보 확인)
   if (step === 1 && verification?.status === 'verified') {
     return (
       <AuthLayout>
-        <div className={styles.stepperRow}>
-          <Stepper current={2} total={4} label="회사 정보 확인" />
-        </div>
         <div className={styles.form}>
           <Banner variant="success">사업장 정보를 불러왔습니다.</Banner>
         </div>
@@ -266,81 +216,9 @@ export default function CompanySignupPage() {
     )
   }
 
-  // 화면 3/4 · 계정 정보
-  if (contactSubStep === 1) {
-    return (
-      <AuthLayout>
-        <div className={styles.stepperRow}>
-          <Stepper current={3} total={4} label="계정 정보" />
-        </div>
-        <p className={styles.title}>계정 정보를 입력해주세요</p>
-        <p className={styles.subtitle}>로그인에 사용할 이메일과 비밀번호를 설정합니다.</p>
-        <div className={styles.form}>
-          <DuplicateCheckField
-            label="이메일"
-            icon={<MailIcon />}
-            name="email"
-            value={contactForm.email}
-            onChange={handleContactChange}
-            placeholder="company@example.com"
-            error={errors.email}
-            status={emailCheck}
-            checking={checkingEmail}
-            onCheck={handleCheckEmail}
-          />
-          <Input
-            label="담당자명"
-            name="contactName"
-            type="text"
-            placeholder="실명을 입력해주세요"
-            value={contactForm.contactName}
-            onChange={handleContactChange}
-            error={errors.contactName}
-            icon={<UserIcon />}
-          />
-          <div>
-            <Input
-              label="비밀번호"
-              name="password"
-              type="password"
-              placeholder="8자 이상, 영문·숫자 조합"
-              value={contactForm.password}
-              onChange={handleContactChange}
-              error={errors.password}
-              icon={<LockIcon />}
-              autoComplete="new-password"
-            />
-            <PasswordStrengthMeter password={contactForm.password} />
-          </div>
-          <Input
-            label="비밀번호 확인"
-            name="confirmPassword"
-            type="password"
-            placeholder="비밀번호를 한 번 더 입력해주세요"
-            value={contactForm.confirmPassword}
-            onChange={handleContactChange}
-            error={errors.confirmPassword}
-            icon={<LockIcon />}
-            autoComplete="new-password"
-          />
-          <button type="button" className={styles.backButton} onClick={() => setSearchParams({ step: '1' })}>
-            ← 이전
-          </button>
-          <Button type="button" variant="primary" className={styles.submit} onClick={handleAccountNext}>
-            다음
-          </Button>
-        </div>
-        {footer}
-      </AuthLayout>
-    )
-  }
-
-  // 화면 4/4 · 담당자 정보
+  // 담당자 정보
   return (
     <AuthLayout>
-      <div className={styles.stepperRow}>
-        <Stepper current={4} total={4} label="담당자 정보" />
-      </div>
       <p className={styles.title}>담당자 정보를 입력해주세요</p>
       <p className={styles.subtitle}>온보딩을 관리하고 학생과 소통할 담당자 정보입니다.</p>
       <form className={styles.form} onSubmit={handleSubmit}>
@@ -364,8 +242,9 @@ export default function CompanySignupPage() {
           icon={<PhoneIcon />}
         />
         <TermsCheckboxes value={terms} onChange={setTerms} error={errors.terms} />
+        {errors.email && <p className={styles.roleError}>{errors.email}</p>}
         {errors.general && <p className={styles.roleError}>{errors.general}</p>}
-        <button type="button" className={styles.backButton} onClick={() => setContactSubStep(1)}>
+        <button type="button" className={styles.backButton} onClick={() => setSearchParams({ step: '1' })}>
           ← 이전
         </button>
         <Button type="submit" variant="primary" className={styles.submit} disabled={isSubmitting}>

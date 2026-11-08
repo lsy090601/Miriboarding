@@ -4,6 +4,7 @@ import cors from 'cors'
 import authRoutes from './routes/auth.routes.js'
 import onboardingRoutes from './routes/onboarding.routes.js'
 import jobsRoutes from './routes/jobs.routes.js'
+import schoolRoutes from './routes/school.routes.js'
 
 const app = express()
 
@@ -14,6 +15,7 @@ app.get('/health', (req, res) => res.json({ ok: true }))
 app.use('/api/auth', authRoutes)
 app.use('/api/onboarding', onboardingRoutes)
 app.use('/api/jobs', jobsRoutes)
+app.use('/api/schools', schoolRoutes)
 
 const PORT = process.env.PORT || 4000
 app.listen(PORT, () => {
