@@ -14,7 +14,7 @@
 
 .toolbar {
   width: 100%;
-  max-width: 498px;
+  max-width: 1040px;
   margin-top: 40px;
   display: flex;
   align-items: center;
@@ -24,11 +24,22 @@
 
 .scheduleList {
   width: 100%;
-  max-width: 561px;
+  max-width: 1040px;
   margin-top: 70px;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
+}
+
+/* 안내 배너·빈 목록 문구는 두 칸을 모두 차지한다 */
+.scheduleList > :not(.scheduleItem) {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 800px) {
+  .scheduleList {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .scheduleItem {
