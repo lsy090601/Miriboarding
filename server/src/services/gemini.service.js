@@ -104,6 +104,7 @@ function buildPrompt({ jobTitle, companyName, industry, companyDescription, jobD
 ${JSON.stringify({ companyName, industry, companyDescription, jobTitle, jobDescription })}
 
 업종과 주요 서비스, 담당 업무를 연결하여 회사에 맞는 일정과 미션을 만드세요.
+회사 소개나 담당 업무가 비어 있다면 등록된 업종과 선택한 직무의 일반적인 신입 업무를 기준으로 작성하세요.
 회사명만으로 사업 내용을 추측하지 말고, 제공되지 않은 사내 규정·조직·도구·고객은 지어내지 마세요.
 확인되지 않은 도구나 절차는 담당자에게 확인하는 활동으로 작성하세요.
 미션에는 실제 업무와 연결된 과제와 제출할 결과물을 구체적으로 명시하세요.

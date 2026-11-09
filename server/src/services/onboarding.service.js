@@ -74,17 +74,19 @@ export async function generateOnboarding({ companyId, jobTitle, industry, compan
   for (const [label, value, limit] of [
     ['업종', industry, 200], ['회사 소개', companyDescription, 2000], ['담당 업무', jobDescription, 2000],
   ]) {
-    if (!isNonEmptyString(value) || value.trim().length > limit) {
-      throw new OnboardingError(400, 'INVALID_INPUT', `${label}을 1~${limit}자로 입력해주세요.`)
+    if (value !== undefined && (typeof value !== 'string' || value.trim().length > limit)) {
+      throw new OnboardingError(400, 'INVALID_INPUT', `${label}은 ${limit}자 이하로 입력해주세요.`)
     }
   }
   const { data: company, error: companyError } = await supabaseAdmin
     .from('companies').select('company_name, industry').eq('id', companyId).maybeSingle()
   if (companyError) throw new OnboardingError(502, 'SUPABASE_ERROR', '회사 정보 조회에 실패했습니다.')
   if (!company) throw new OnboardingError(404, 'NOT_FOUND', '회사 정보를 찾을 수 없습니다.')
+  const companyIndustry = isNonEmptyString(company.industry) ? company.industry.trim() : industry?.trim()
+  if (!companyIndustry) throw new OnboardingError(400, 'INVALID_INPUT', '등록된 회사의 업종 정보가 없습니다. 회사 정보를 확인해주세요.')
   const plan = await generateOnboardingPlan({
     jobTitle: jobTitle.trim(), companyName: company.company_name,
-    industry: industry.trim(), companyDescription: companyDescription.trim(), jobDescription: jobDescription.trim(),
+    industry: companyIndustry, companyDescription: companyDescription?.trim() || '', jobDescription: jobDescription?.trim() || '',
   })
   const missions = normalizeMissions(plan.missions)
 
@@ -572,6 +574,8 @@ export async function registerStudentsByEmail(companyId, emails) {
   if (!isNonEmptyString(companyId) || !Array.isArray(emails) || emails.length === 0) {
     throw new OnboardingError(400, 'INVALID_INPUT', 'companyId와 이메일 목록이 필요합니다.')
   }
+
+  await fetchOnboardingRow(companyId)
 
   const results = { success: 0, failed: 0, failedEmails: [] }
 

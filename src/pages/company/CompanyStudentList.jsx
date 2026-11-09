@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as api from "../../lib/api.js";
 import { getCurrentCompanyId } from "../../lib/auth.js";
-import { studentListMock } from "../../mock/company.js";
-import { formatDate } from "../../mock/onboarding.js";
 import Banner from "../../components/Banner/Banner.jsx";
 import Button from "../../components/Button/Button.jsx";
 import ProgressBar from "../../components/ProgressBar/ProgressBar.jsx";
@@ -12,7 +10,7 @@ import styles from "./CompanyStudentList.module.css";
 export default function CompanyStudentList() {
   const navigate = useNavigate();
   const [students, setStudents] = useState([]);
-  const [isMock, setIsMock] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
 
@@ -33,12 +31,9 @@ export default function CompanyStudentList() {
             lastAccess: student.lastAccess ? new Date(student.lastAccess).toLocaleString('ko-KR') : '접속 기록 없음',
           })),
         );
-        setIsMock(false);
       } catch (error) {
-        console.error("학생 목록 API 연동 실패, mock으로 폴백합니다:", error);
         if (cancelled) return;
-        setStudents(studentListMock);
-        setIsMock(true);
+        setLoadError(error.message || "학생 현황을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.");
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -56,11 +51,6 @@ export default function CompanyStudentList() {
       return;
     }
 
-    if (isMock) {
-      alert("삭제되었습니다. (mock)");
-      setStudents((prev) => prev.filter((student) => student.id !== studentId));
-      return;
-    }
 
     setDeletingId(studentId);
     try {
@@ -82,14 +72,17 @@ export default function CompanyStudentList() {
             ← 뒤로가기
           </Button>
           <h1 className={styles.title}>학생 현황</h1>
+          <Button variant="primary" onClick={() => navigate("/company/register-students")}>
+            + 학생 등록하기
+          </Button>
         </div>
 
-        {isMock && <Banner variant="warning">서버 연결에 실패해서 mock 데이터로 표시 중이에요.</Banner>}
+        {loadError && <Banner variant="warning">{loadError}</Banner>}
 
         {isLoading ? (
           <p>불러오는 중...</p>
-        ) : students.length === 0 ? (
-          <p>아직 등록된 학생이 없어요.</p>
+        ) : loadError ? null : students.length === 0 ? (
+          <p>아직 등록된 학생이 없어요. 위의 학생 등록하기 버튼으로 가입한 학생을 등록해주세요.</p>
         ) : (
           <div className={styles.tableWrap}>
             <table className={styles.table}>

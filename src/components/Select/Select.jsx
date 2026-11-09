@@ -1,7 +1,7 @@
 import { ChevronDownIcon } from '../icons/Icons.jsx'
 import styles from './Select.module.css'
 
-export default function Select({ label, name, value, onChange, options, placeholder, error, id }) {
+export default function Select({ label, name, value, onChange, options, placeholder, error, id, disabled = false }) {
   const fieldId = id ?? name
 
   return (
@@ -16,6 +16,7 @@ export default function Select({ label, name, value, onChange, options, placehol
           id={fieldId}
           className={`${styles.select} ${value ? styles.hasValue : ''}`}
           name={name}
+          disabled={disabled}
           value={value}
           onChange={onChange}
           aria-label={label ?? placeholder}

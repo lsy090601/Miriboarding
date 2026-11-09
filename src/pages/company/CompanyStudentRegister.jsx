@@ -12,8 +12,10 @@ export default function CompanyStudentRegister() {
   const [emailInput, setEmailInput] = useState("");
   const [result, setResult] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleRegister() {
+    if (isSubmitting) return;
     const emails = emailInput
       .split("\n")
       .map((email) => email.trim())
@@ -22,13 +24,14 @@ export default function CompanyStudentRegister() {
     if (emails.length === 0) return;
 
     setIsSubmitting(true);
+    setError("");
+    setResult(null);
     try {
       const companyId = getCurrentCompanyId();
       const data = await api.registerStudentsByEmail(companyId, emails);
       setResult({ success: data.success, failed: data.failed, failedEmails: data.failedEmails ?? [] });
     } catch (error) {
-      console.error("학생 등록 API 실패:", error);
-      setResult({ success: 0, failed: emails.length, failedEmails: emails });
+      setError(error.message || "학생 등록에 실패했습니다. 다시 시도해주세요.");
     } finally {
       setIsSubmitting(false);
     }
@@ -37,7 +40,7 @@ export default function CompanyStudentRegister() {
   return (
     <div className={styles.page}>
       <div className={styles.container}>
-        <Button variant="outline" size="sm" onClick={() => navigate("/company/home")}>
+        <Button variant="outline" size="sm" onClick={() => navigate("/company/students")}>
           ← 뒤로가기
         </Button>
 
@@ -46,6 +49,7 @@ export default function CompanyStudentRegister() {
           일괄로 학생 이메일을 등록하면 학생들이 자동으로 온보딩을 시작할 수 있습니다. (미리보딩에 학생으로 가입된
           이메일만 등록됩니다)
         </p>
+        <p className={styles.desc}>먼저 온보딩을 생성·배포해주세요. 새로 등록하는 학생에게 현재 배포된 온보딩이 배정됩니다.</p>
 
         <Input
           multiline
@@ -57,13 +61,15 @@ export default function CompanyStudentRegister() {
         />
 
         <div className={styles.buttonRow}>
-          <Button variant="outline" onClick={() => navigate("/company/home")}>
+          <Button variant="outline" onClick={() => navigate("/company/students")}>
             취소
           </Button>
-          <Button variant="primary" onClick={handleRegister} disabled={isSubmitting}>
+          <Button variant="primary" onClick={handleRegister} disabled={isSubmitting || !emailInput.trim()}>
             {isSubmitting ? "등록 중..." : "등록하기"}
           </Button>
         </div>
+        {error && <p role="alert">{error}</p>}
+        {result?.success > 0 && <Button variant="primary" onClick={() => navigate("/company/students")}>학생 현황 확인하기</Button>}
 
         {result && (
           <Banner variant={result.failed > 0 ? "warning" : "success"}>

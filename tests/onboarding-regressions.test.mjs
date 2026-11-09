@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import vm from 'node:vm'
 import { transformSync } from 'esbuild'
 import { randomUUID } from 'node:crypto'
+import { getCompanyJobRecommendations } from '../src/utils/companyJobs.js'
 
 class OnboardingError extends Error {
   constructor(status, code, message) { super(message); this.status = status; this.code = code }
@@ -176,4 +177,73 @@ test('student loading queries existing enrollment and never tries company-only e
   assert.deepEqual(calls, ['getEnrollment'])
   assert.equal(state.isLoading, false)
   assert.equal(state.onboarding.targetDate, '2026-11-16')
+})
+
+test('company and job alone generate a draft using the registered company industry', async () => {
+  const db = database({ companies: [{ id: 'company', company_name: 'Stored company', industry: 'Manufacturing' }], company_onboarding_versions: [] })
+  let context
+  const { generateOnboarding } = load('server/src/services/onboarding.service.js', {
+    supabaseAdmin: db, isNonEmptyString: v => typeof v === 'string' && !!v.trim(), versionError: e => e,
+    generateOnboardingPlan: async value => { context = value; return { schedules: { day: [], week: [], month: [] }, missions: [{ title: 'Task' }] } },
+  }, ['generateOnboarding'])
+  const draft = await generateOnboarding({ companyId: 'company', jobTitle: 'Quality engineer' })
+  assert.equal(draft.status, 'draft')
+  assert.equal(context.companyName, 'Stored company')
+  assert.equal(context.industry, 'Manufacturing')
+  assert.equal(context.companyDescription, '')
+  assert.equal(context.jobDescription, '')
+})
+
+function companyHarness(file, name, api) {
+  const slots = []; const effects = []; const navigations = []; let cursor = 0; let first = true
+  const deps = {
+    React: { createElement: (type, props, ...children) => ({ type, props: { ...props, children } }) },
+    useState(initial) { const index = cursor++; if (!(index in slots)) slots[index] = initial; return [slots[index], value => { slots[index] = typeof value === 'function' ? value(slots[index]) : value }] },
+    useEffect(fn) { if (first) effects.push(fn) },
+    useNavigate: () => path => navigations.push(path), getCurrentCompanyId: () => 'company',
+    getCompanyJobRecommendations, api, styles: {}, Banner: 'Banner', Button: 'Button', Select: 'Select', Input: 'Input', ProgressBar: 'ProgressBar',
+  }
+  const component = load(file, deps, [name], true)[name]
+  return {
+    render() { cursor = 0; const tree = component(); first = false; return tree },
+    async mount() { this.render(); effects.forEach(fn => fn()); await new Promise(resolve => setImmediate(resolve)) },
+    navigations,
+  }
+}
+
+test('setup recommends company jobs and enables generation without extra descriptions', async () => {
+  let request
+  const harness = companyHarness('src/pages/company/CompanyOnboardingSetup.jsx', 'CompanyOnboardingSetup', {
+    getCompanyProfile: async () => ({ companyName: '제조 회사', industry: '영상 기기 제조업' }),
+    generateOnboarding: async value => { request = value; return { versionId: 'draft-id' } },
+  })
+  await harness.mount()
+  const select = find(harness.render(), node => node.type === 'Select')
+  assert.ok(select.props.options.includes('품질관리'))
+  assert.ok(!select.props.options.includes('백엔드 개발'))
+  select.props.onChange({ target: { value: '품질관리' } })
+  const button = find(harness.render(), node => node.type === 'Button' && node.props.variant === 'primary')
+  assert.equal(!!button.props.disabled, false)
+  await button.props.onClick()
+  assert.equal(request.jobTitle, '품질관리')
+  assert.equal(request.companyDescription, '')
+  assert.ok(harness.navigations[0].includes('versionId=draft-id'))
+})
+
+test('empty student list exposes registration and successful registration links back to the list', async () => {
+  const list = companyHarness('src/pages/company/CompanyStudentList.jsx', 'CompanyStudentList', {
+    listEnrolledStudents: async () => ({ students: [] }),
+  })
+  await list.mount()
+  find(list.render(), node => node.type === 'Button' && node.props.children.includes('+ 학생 등록하기')).props.onClick()
+  assert.deepEqual(list.navigations, ['/company/register-students'])
+  let emails
+  const registration = companyHarness('src/pages/company/CompanyStudentRegister.jsx', 'CompanyStudentRegister', {
+    registerStudentsByEmail: async (id, value) => { emails = value; return { success: 1, failed: 0, failedEmails: [] } },
+  })
+  find(registration.render(), node => node.type === 'Input').props.onChange({ target: { value: 'student@example.com' } })
+  await find(registration.render(), node => node.type === 'Button' && node.props.children.includes('등록하기')).props.onClick()
+  assert.equal(emails[0], 'student@example.com')
+  find(registration.render(), node => node.type === 'Button' && node.props.children.includes('학생 현황 확인하기')).props.onClick()
+  assert.deepEqual(registration.navigations, ['/company/students'])
 })
