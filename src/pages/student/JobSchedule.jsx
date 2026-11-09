@@ -29,6 +29,9 @@ export default function JobSchedule() {
 
   useEffect(() => {
     let cancelled = false
+    // 다른 직무로 이동하면 이전 직무 화면이 남지 않도록 로딩 상태로 되돌린다.
+    setJob(null)
+    setIsLoading(true)
 
     async function load() {
       const meta = JOB_SLUG_META[jobId]

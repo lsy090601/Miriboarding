@@ -1,9 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { NFC_JOBS } from "../config/nfcJobs";
 
 export default function useNfcKiosk() {
     const navigate = useNavigate();
+    // navigate는 페이지가 바뀔 때마다 새로 만들어지므로 ref로 보관해 연결을 유지한다.
+    const navigateRef = useRef(navigate);
+    navigateRef.current = navigate;
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -20,7 +23,7 @@ export default function useNfcKiosk() {
             ws.onmessage = (e) => {
                 const { uid } = JSON.parse(e.data);
                 const jobId = NFC_JOBS[uid];
-                if (jobId) navigate(`/student/explore/${jobId}`);
+                if (jobId) navigateRef.current(`/student/explore/${jobId}`);
                 else console.warn("등록되지 않은 카드:", uid);
             };
             ws.onclose = () => {
@@ -34,5 +37,5 @@ export default function useNfcKiosk() {
             clearTimeout(timer);
             ws?.close();
         };
-    }, [navigate]);
+    }, []);
 }
